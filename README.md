@@ -33,7 +33,7 @@ Since this is a Lovelace UI card, you need to add it as a custom frontend reposi
 6. When prompted, reload your browser.
 
 ### Method 2: Manual
-1. Download the `proxmox-ha-card.js` file from the `www` folder of this repository.
+1. Download the `proxmox-ha-card.js` file from this repository.
 2. Copy it into your Home Assistant's `config/www` directory.
 3. Go to **Settings → Dashboards → Three dots (top right) → Resources**.
 4. Add a new resource:
