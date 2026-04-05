@@ -6,7 +6,6 @@ class ProxmoxCardEditor extends LitElement {
 
   setConfig(config) { this.config = { ...config, vms: config.vms || [] }; }
 
-  // Kugelsichere Speicherung für den Editor
   _changeValue(field, value) {
     if (!this.config || !this.hass) return;
     if (this.config[field] === value) return;
@@ -46,76 +45,93 @@ class ProxmoxCardEditor extends LitElement {
     return html`
       <div class="editor-container">
         
-        <h3 style="margin-top: 8px; margin-bottom: 4px;">Karten-Titel & Design</h3>
-        <div class="grid-2">
-          <ha-textfield label="Karten-Titel" .value="${this.config.title || ''}" @input="${(e) => this._changeValue('title', e.target.value)}"></ha-textfield>
-          <ha-textfield label="Titel-Farbe (CSS/var)" .value="${this.config.title_color || ''}" @input="${(e) => this._changeValue('title_color', e.target.value)}" placeholder="z.B. var(--primary-color)"></ha-textfield>
-          <ha-textfield label="Titel-Größe (z.B. 24px)" .value="${this.config.title_size || ''}" @input="${(e) => this._changeValue('title_size', e.target.value)}"></ha-textfield>
-          <ha-textfield label="Titel-Dicke (z.B. bold)" .value="${this.config.title_weight || ''}" @input="${(e) => this._changeValue('title_weight', e.target.value)}"></ha-textfield>
-        </div>
-        
-        <h3 style="margin-top: 16px; margin-bottom: 4px;">CPU Box Design & Sensor</h3>
-        <div class="grid-2">
-          <ha-entity-picker .hass=${this.hass} .value=${this.config.node_cpu || ""} label="CPU Sensor" include-domains='["sensor"]' @value-changed=${(e) => this._changeValue('node_cpu', e.detail.value)} allow-custom-entity></ha-entity-picker>
-          <ha-textfield label="Graph Farbe (HEX/RGBA)" .value="${this.config.cpu_color || '#2196f3'}" @input="${(e) => this._changeValue('cpu_color', e.target.value)}"></ha-textfield>
-          <ha-textfield label="Box Rahmen (z.B. 1px solid red)" .value="${this.config.cpu_border || ''}" @input="${(e) => this._changeValue('cpu_border', e.target.value)}"></ha-textfield>
-          <ha-textfield label="Box Schatten (CSS)" .value="${this.config.cpu_shadow || ''}" @input="${(e) => this._changeValue('cpu_shadow', e.target.value)}"></ha-textfield>
-        </div>
-
-        <h3 style="margin-top: 16px; margin-bottom: 4px;">RAM Box Design & Sensor</h3>
-        <div class="grid-2">
-          <ha-entity-picker .hass=${this.hass} .value=${this.config.node_memory || ""} label="RAM Sensor" include-domains='["sensor"]' @value-changed=${(e) => this._changeValue('node_memory', e.detail.value)} allow-custom-entity></ha-entity-picker>
-          <ha-textfield label="Graph Farbe (HEX/RGBA)" .value="${this.config.ram_color || '#9c27b0'}" @input="${(e) => this._changeValue('ram_color', e.target.value)}"></ha-textfield>
-          <ha-textfield label="Box Rahmen (CSS)" .value="${this.config.ram_border || ''}" @input="${(e) => this._changeValue('ram_border', e.target.value)}"></ha-textfield>
-          <ha-textfield label="Box Schatten (CSS)" .value="${this.config.ram_shadow || ''}" @input="${(e) => this._changeValue('ram_shadow', e.target.value)}"></ha-textfield>
-        </div>
-
-        <h3 style="margin-top: 24px; margin-bottom: 8px;">Virtuelle Maschinen / Container</h3>
-        
-        ${this.config.vms.map((vm, index) => html`
-          <div class="vm-editor-box">
-            <div class="vm-header">
-              <strong>${vm.name || `VM ${index + 1}`}</strong>
-              <button class="delete-btn" @click="${() => this._removeVm(index)}">
-                <ha-icon icon="mdi:delete-outline"></ha-icon> Löschen
-              </button>
-            </div>
-            
+        <ha-expansion-panel header="Karten-Titel & Design" outlined expanded>
+          <div class="panel-content">
             <div class="grid-2">
-              <ha-textfield label="Anzeigename*" .value="${vm.name || ''}" @input="${(e) => this._vmChanged(index, 'name', e.target.value)}"></ha-textfield>
-              <ha-icon-picker .hass=${this.hass} .value=${vm.icon || ''} label="MDI Icon" @value-changed=${(e) => this._vmChanged(index, 'icon', e.detail.value)}></ha-icon-picker>
-              
-              <ha-textfield label="Zeilen-Hintergrund (CSS)" .value="${vm.bg_color || ''}" @input="${(e) => this._vmChanged(index, 'bg_color', e.target.value)}" placeholder="rgba(255,0,0,0.1)"></ha-textfield>
-              <ha-textfield label="Bild-URL (/local/logo.png)" .value="${vm.image || ''}" @input="${(e) => this._vmChanged(index, 'image', e.target.value)}"></ha-textfield>
-              
-              <ha-textfield label="Zeilen-Rahmen (CSS)" .value="${vm.border || ''}" @input="${(e) => this._vmChanged(index, 'border', e.target.value)}" placeholder="1px solid var(--primary-color)"></ha-textfield>
-              <ha-textfield label="Zeilen-Schatten (CSS)" .value="${vm.shadow || ''}" @input="${(e) => this._vmChanged(index, 'shadow', e.target.value)}" placeholder="0 4px 8px rgba(0,0,0,0.2)"></ha-textfield>
-
-              <ha-entity-picker .hass=${this.hass} .value=${vm.status || ''} label="Status (binary_sensor)" include-domains='["binary_sensor"]' @value-changed=${(e) => this._vmChanged(index, 'status', e.detail.value)} allow-custom-entity></ha-entity-picker>
-              <ha-entity-picker .hass=${this.hass} .value=${vm.start || ''} label="Start Button" include-domains='["button"]' @value-changed=${(e) => this._vmChanged(index, 'start', e.detail.value)} allow-custom-entity></ha-entity-picker>
-              <ha-entity-picker .hass=${this.hass} .value=${vm.shutdown || ''} label="Shutdown Button" include-domains='["button"]' @value-changed=${(e) => this._vmChanged(index, 'shutdown', e.detail.value)} allow-custom-entity></ha-entity-picker>
-              <ha-entity-picker .hass=${this.hass} .value=${vm.stop || ''} label="Stop Button" include-domains='["button"]' @value-changed=${(e) => this._vmChanged(index, 'stop', e.detail.value)} allow-custom-entity></ha-entity-picker>
-              <ha-entity-picker .hass=${this.hass} .value=${vm.reboot || ''} label="Reboot Button" include-domains='["button"]' @value-changed=${(e) => this._vmChanged(index, 'reboot', e.detail.value)} allow-custom-entity></ha-entity-picker>
+              <ha-textfield label="Karten-Titel" .value="${this.config.title || ''}" @input="${(e) => this._changeValue('title', e.target.value)}"></ha-textfield>
+              <ha-icon-picker .hass=${this.hass} .value=${this.config.title_icon || ''} label="Titel Icon" @value-changed=${(e) => this._changeValue('title_icon', e.detail.value)}></ha-icon-picker>
+              <ha-textfield label="Titel-Farbe (CSS/var)" .value="${this.config.title_color || ''}" @input="${(e) => this._changeValue('title_color', e.target.value)}" placeholder="z.B. var(--primary-color)"></ha-textfield>
+              <ha-textfield label="Titel-Größe (z.B. 24px)" .value="${this.config.title_size || ''}" @input="${(e) => this._changeValue('title_size', e.target.value)}"></ha-textfield>
+              <ha-textfield label="Titel-Dicke (z.B. bold)" .value="${this.config.title_weight || ''}" @input="${(e) => this._changeValue('title_weight', e.target.value)}"></ha-textfield>
             </div>
           </div>
-        `)}
-        <mwc-button raised @click="${this._addVm}" style="margin-top: 16px;">
-          <ha-icon icon="mdi:plus"></ha-icon> VM / Container hinzufügen
-        </mwc-button>
+        </ha-expansion-panel>
+        
+        <ha-expansion-panel header="CPU Box Design & Sensor" outlined>
+          <div class="panel-content">
+            <div class="grid-2">
+              <ha-entity-picker .hass=${this.hass} .value=${this.config.node_cpu || ""} label="CPU Sensor" include-domains='["sensor"]' @value-changed=${(e) => this._changeValue('node_cpu', e.detail.value)} allow-custom-entity></ha-entity-picker>
+              <ha-textfield label="Graph Farbe (HEX/RGBA)" .value="${this.config.cpu_color || '#2196f3'}" @input="${(e) => this._changeValue('cpu_color', e.target.value)}"></ha-textfield>
+              <ha-textfield label="Zahlen-Farbe (CSS)" .value="${this.config.cpu_value_color || ''}" @input="${(e) => this._changeValue('cpu_value_color', e.target.value)}" placeholder="z.B. #2196f3"></ha-textfield>
+              <ha-textfield label="Text-Farbe (CSS)" .value="${this.config.cpu_label_color || ''}" @input="${(e) => this._changeValue('cpu_label_color', e.target.value)}" placeholder="z.B. var(--secondary-text-color)"></ha-textfield>
+              <ha-textfield label="Box Rahmen (CSS)" .value="${this.config.cpu_border || ''}" @input="${(e) => this._changeValue('cpu_border', e.target.value)}"></ha-textfield>
+              <ha-textfield label="Box Schatten (CSS)" .value="${this.config.cpu_shadow || ''}" @input="${(e) => this._changeValue('cpu_shadow', e.target.value)}"></ha-textfield>
+            </div>
+          </div>
+        </ha-expansion-panel>
+
+        <ha-expansion-panel header="RAM Box Design & Sensor" outlined>
+          <div class="panel-content">
+            <div class="grid-2">
+              <ha-entity-picker .hass=${this.hass} .value=${this.config.node_memory || ""} label="RAM Sensor" include-domains='["sensor"]' @value-changed=${(e) => this._changeValue('node_memory', e.detail.value)} allow-custom-entity></ha-entity-picker>
+              <ha-textfield label="Graph Farbe (HEX/RGBA)" .value="${this.config.ram_color || '#9c27b0'}" @input="${(e) => this._changeValue('ram_color', e.target.value)}"></ha-textfield>
+              <ha-textfield label="Zahlen-Farbe (CSS)" .value="${this.config.ram_value_color || ''}" @input="${(e) => this._changeValue('ram_value_color', e.target.value)}" placeholder="z.B. #9c27b0"></ha-textfield>
+              <ha-textfield label="Text-Farbe (CSS)" .value="${this.config.ram_label_color || ''}" @input="${(e) => this._changeValue('ram_label_color', e.target.value)}" placeholder="z.B. var(--secondary-text-color)"></ha-textfield>
+              <ha-textfield label="Box Rahmen (CSS)" .value="${this.config.ram_border || ''}" @input="${(e) => this._changeValue('ram_border', e.target.value)}"></ha-textfield>
+              <ha-textfield label="Box Schatten (CSS)" .value="${this.config.ram_shadow || ''}" @input="${(e) => this._changeValue('ram_shadow', e.target.value)}"></ha-textfield>
+            </div>
+          </div>
+        </ha-expansion-panel>
+
+        <ha-expansion-panel header="Virtuelle Maschinen / Container (${this.config.vms.length})" outlined>
+          <div class="panel-content">
+            ${this.config.vms.map((vm, index) => html`
+              <ha-expansion-panel header="${vm.name || `VM ${index + 1}`}" outlined>
+                <div class="panel-content">
+                  <div class="vm-header" style="border: none; padding-bottom: 0; margin-bottom: 8px;">
+                    <button class="delete-btn" @click="${() => this._removeVm(index)}">
+                      <ha-icon icon="mdi:delete-outline"></ha-icon> Diese VM Löschen
+                    </button>
+                  </div>
+                  <div class="grid-2">
+                    <ha-textfield label="Anzeigename*" .value="${vm.name || ''}" @input="${(e) => this._vmChanged(index, 'name', e.target.value)}"></ha-textfield>
+                    <ha-icon-picker .hass=${this.hass} .value=${vm.icon || ''} label="MDI Icon" @value-changed=${(e) => this._vmChanged(index, 'icon', e.detail.value)}></ha-icon-picker>
+                    
+                    <ha-textfield label="Zeilen-Hintergrund (CSS)" .value="${vm.bg_color || ''}" @input="${(e) => this._vmChanged(index, 'bg_color', e.target.value)}" placeholder="rgba(255,0,0,0.1)"></ha-textfield>
+                    <ha-textfield label="Bild-URL (/local/logo.png)" .value="${vm.image || ''}" @input="${(e) => this._vmChanged(index, 'image', e.target.value)}"></ha-textfield>
+                    
+                    <ha-textfield label="Zeilen-Rahmen (CSS)" .value="${vm.border || ''}" @input="${(e) => this._vmChanged(index, 'border', e.target.value)}" placeholder="1px solid var(--primary-color)"></ha-textfield>
+                    <ha-textfield label="Zeilen-Schatten (CSS)" .value="${vm.shadow || ''}" @input="${(e) => this._vmChanged(index, 'shadow', e.target.value)}" placeholder="0 4px 8px rgba(0,0,0,0.2)"></ha-textfield>
+
+                    <ha-entity-picker .hass=${this.hass} .value=${vm.status || ''} label="Status (binary_sensor)" include-domains='["binary_sensor"]' @value-changed=${(e) => this._vmChanged(index, 'status', e.detail.value)} allow-custom-entity></ha-entity-picker>
+                    <ha-entity-picker .hass=${this.hass} .value=${vm.start || ''} label="Start Button" include-domains='["button"]' @value-changed=${(e) => this._vmChanged(index, 'start', e.detail.value)} allow-custom-entity></ha-entity-picker>
+                    <ha-entity-picker .hass=${this.hass} .value=${vm.shutdown || ''} label="Shutdown Button" include-domains='["button"]' @value-changed=${(e) => this._vmChanged(index, 'shutdown', e.detail.value)} allow-custom-entity></ha-entity-picker>
+                    <ha-entity-picker .hass=${this.hass} .value=${vm.stop || ''} label="Stop Button" include-domains='["button"]' @value-changed=${(e) => this._vmChanged(index, 'stop', e.detail.value)} allow-custom-entity></ha-entity-picker>
+                    <ha-entity-picker .hass=${this.hass} .value=${vm.reboot || ''} label="Reboot Button" include-domains='["button"]' @value-changed=${(e) => this._vmChanged(index, 'reboot', e.detail.value)} allow-custom-entity></ha-entity-picker>
+                  </div>
+                </div>
+              </ha-expansion-panel>
+            `)}
+            <mwc-button raised @click="${this._addVm}" style="margin-top: 8px;">
+              <ha-icon icon="mdi:plus"></ha-icon> VM / Container hinzufügen
+            </mwc-button>
+          </div>
+        </ha-expansion-panel>
+
       </div>
     `;
   }
 
   static get styles() {
     return css`
-      .editor-container { display: flex; flex-direction: column; gap: 16px; }
-      .vm-editor-box { border: 1px solid var(--divider-color); border-radius: 8px; padding: 16px; background: var(--secondary-background-color); }
-      .vm-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 1px solid var(--divider-color); padding-bottom: 8px; }
-      .delete-btn { background: none; border: none; color: var(--error-color); cursor: pointer; display: flex; align-items: center; gap: 4px; font-weight: 500; font-size: 14px; }
+      .editor-container { display: flex; flex-direction: column; gap: 12px; }
+      .panel-content { padding: 16px 0; }
+      .delete-btn { background: none; border: none; color: var(--error-color); cursor: pointer; display: flex; align-items: center; gap: 4px; font-weight: 500; font-size: 14px; margin-left: auto; }
       .delete-btn:hover { text-decoration: underline; }
       .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: center; }
       ha-textfield, ha-entity-picker, ha-icon-picker { width: 100%; }
       mwc-button { --mdc-theme-primary: var(--primary-color); }
+      ha-expansion-panel { margin-bottom: 8px; }
     `;
   }
 }
@@ -212,7 +228,11 @@ class ProxmoxCard extends LitElement {
       ${this.config.ram_shadow ? `--custom-shadow: ${this.config.ram_shadow};` : ''}
     `;
 
-    // Der injizierte Style für den Titel!
+    const cpuValueStyle = this.config.cpu_value_color ? `color: ${this.config.cpu_value_color};` : '';
+    const cpuLabelStyle = this.config.cpu_label_color ? `color: ${this.config.cpu_label_color};` : '';
+    const ramValueStyle = this.config.ram_value_color ? `color: ${this.config.ram_value_color};` : '';
+    const ramLabelStyle = this.config.ram_label_color ? `color: ${this.config.ram_label_color};` : '';
+
     const headerStyle = `
       ${this.config.title_color ? `color: ${this.config.title_color};` : ''}
       ${this.config.title_size ? `font-size: ${this.config.title_size};` : ''}
@@ -222,8 +242,9 @@ class ProxmoxCard extends LitElement {
     return html`
       <ha-card>
         
-        ${this.config.title ? html`
+        ${this.config.title || this.config.title_icon ? html`
           <div class="custom-header" style="${headerStyle}">
+            ${this.config.title_icon ? html`<ha-icon icon="${this.config.title_icon}" class="header-icon"></ha-icon>` : ''}
             ${this.config.title}
           </div>
         ` : ''}
@@ -232,15 +253,15 @@ class ProxmoxCard extends LitElement {
           <div class="stat-box" style="${cpuStyle}">
             ${this._cpuGraph ? html`<div class="graph-wrapper">${this._cpuGraph}</div>` : ''}
             <div class="stat-content">
-              <span class="stat-value">${cpuValue} %</span>
-              <span class="stat-name">CPU Auslastung</span>
+              <span class="stat-value" style="${cpuValueStyle}">${cpuValue} %</span>
+              <span class="stat-name" style="${cpuLabelStyle}">CPU Auslastung</span>
             </div>
           </div>
           <div class="stat-box" style="${ramStyle}">
             ${this._ramGraph ? html`<div class="graph-wrapper">${this._ramGraph}</div>` : ''}
             <div class="stat-content">
-              <span class="stat-value">${ramValue} %</span>
-              <span class="stat-name">RAM Nutzung</span>
+              <span class="stat-value" style="${ramValueStyle}">${ramValue} %</span>
+              <span class="stat-name" style="${ramLabelStyle}">RAM Nutzung</span>
             </div>
           </div>
         </div>
@@ -294,6 +315,13 @@ class ProxmoxCard extends LitElement {
         color: var(--ha-card-header-color, var(--primary-text-color));
         letter-spacing: -0.012em;
         line-height: 32px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .header-icon {
+        --mdc-icon-size: 28px;
+        color: inherit;
       }
 
       .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; padding: 0 16px 20px 16px; }
