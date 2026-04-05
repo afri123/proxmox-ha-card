@@ -109,16 +109,14 @@ customElements.define("proxmox-ha-card-editor", ProxmoxCardEditor);
 class ProxmoxCard extends LitElement {
   constructor() {
     super();
-    this._historyCache = {}; // Frontend-only Buffer
-    this._lastUpdate = {};   // Tracking der letzten HA-Updates
-    this.MAX_POINTS = 30;    // Speichert die letzten 30 Datenpunkte
+    this._cpuGraph = null;
+    this._ramGraph = null;
   }
 
   static get properties() {
     return { 
       hass: { type: Object }, 
-      config: { type: Object },
-      _historyCache: { type: Object }
+      config: { type: Object }
     };
   }
 
@@ -128,71 +126,52 @@ class ProxmoxCard extends LitElement {
   setConfig(config) {
     if (!config.vms) throw new Error("Bitte konfiguriere die 'vms'.");
     this.config = { title: "Proxmox", ...config };
+    
+    // Bei Konfigurationsänderung müssen die Graphen neu initiiert werden
+    this._cpuGraph = null;
+    this._ramGraph = null;
   }
 
-  // Live-Tracking der Sensordaten OHNE Backend-API
-  updated(changedProperties) {
-    super.updated(changedProperties);
-    if (changedProperties.has('hass')) {
-      this._updateLocalHistory();
-    }
+  // Dieser Setter ist kugelsicher: Er zwingt die Karte und die embedded Graphen zu Updates!
+  set hass(hass) {
+    const oldHass = this._hass;
+    this._hass = hass;
+    
+    // Gebe das hass Objekt an die Mini-Graph-Cards weiter
+    if (this._cpuGraph) this._cpuGraph.hass = hass;
+    if (this._ramGraph) this._ramGraph.hass = hass;
+    
+    this.requestUpdate('hass', oldHass);
   }
 
-  _updateLocalHistory() {
-    if (!this.config || !this.hass) return;
-    let cacheChanged = false;
+  get hass() { return this._hass; }
 
-    [this.config.node_cpu, this.config.node_memory].forEach(entityId => {
-      if (entityId && this.hass.states[entityId]) {
-        const stateObj = this.hass.states[entityId];
-        
-        // Nur updaten, wenn sich der Zeitstempel (last_updated) wirklich geändert hat
-        if (this._lastUpdate[entityId] !== stateObj.last_updated) {
-          this._lastUpdate[entityId] = stateObj.last_updated;
-          const val = parseFloat(stateObj.state);
-          
-          if (!isNaN(val)) {
-            if (!this._historyCache[entityId]) this._historyCache[entityId] = [];
-            this._historyCache[entityId].push(val);
-            
-            // Verhindern, dass der Arbeitsspeicher überläuft
-            if (this._historyCache[entityId].length > this.MAX_POINTS) {
-              this._historyCache[entityId].shift();
-            }
-            cacheChanged = true;
-          }
-        }
+  // Erstellt die mini-graph-card Elemente on the fly
+  _createGraph(entityId, color) {
+    if (!entityId) return null;
+    const el = document.createElement("mini-graph-card");
+    el.setConfig({
+      entities: [entityId],
+      line_color: color,
+      line_width: 2,
+      hours_to_show: 24,
+      points_per_hour: 2,
+      show: {
+        name: false, icon: false, state: false, 
+        labels: false, fill: true, points: false, legend: false
       }
     });
-
-    if (cacheChanged) {
-      this._historyCache = { ...this._historyCache }; // Löst einen Re-Render aus
-    }
+    el.hass = this.hass;
+    return el;
   }
 
-  // Generiert den SVG Path String aus dem In-Memory-Array (baut sich von links nach rechts auf)
-  _generateSparklinePath(entityId) {
-    const data = this._historyCache[entityId];
-    if (!data || data.length < 2) return "";
-
-    const width = 100;
-    const height = 100;
-    const step = width / (this.MAX_POINTS - 1);
-    
-    // Berechne Startpunkt, damit die Kurve sich von links nach rechts füllt
-    const startIndex = this.MAX_POINTS - data.length;
-
-    let path = `M ${startIndex * step},${height} `;
-    
-    data.forEach((val, i) => {
-      const boundedVal = Math.min(Math.max(val, 0), 100);
-      const y = height - (boundedVal / 100 * height);
-      const x = (startIndex + i) * step;
-      path += `L ${x},${y} `;
-    });
-    
-    path += `L ${width},${height} Z`;
-    return path;
+  _initGraphs() {
+    if (!this._cpuGraph && this.config.node_cpu) {
+      this._cpuGraph = this._createGraph(this.config.node_cpu, "#2196f3");
+    }
+    if (!this._ramGraph && this.config.node_memory) {
+      this._ramGraph = this._createGraph(this.config.node_memory, "#9c27b0");
+    }
   }
 
   _handleAction(entityId) {
@@ -202,39 +181,30 @@ class ProxmoxCard extends LitElement {
 
   render() {
     if (!this.hass || !this.config) return html``;
+    
+    this._initGraphs(); // Stellt sicher, dass die Graphen existieren
 
     const cpuState = this.config.node_cpu ? this.hass.states[this.config.node_cpu] : null;
     const ramState = this.config.node_memory ? this.hass.states[this.config.node_memory] : null;
     
-    const cpuValue = cpuState ? parseFloat(cpuState.state).toFixed(1) : 0;
-    const ramValue = ramState ? parseFloat(ramState.state).toFixed(1) : 0;
-
-    const cpuPath = this._generateSparklinePath(this.config.node_cpu);
-    const ramPath = this._generateSparklinePath(this.config.node_memory);
+    const cpuValue = cpuState ? parseFloat(cpuState.state).toFixed(1) : '-';
+    const ramValue = ramState ? parseFloat(ramState.state).toFixed(1) : '-';
 
     return html`
       <ha-card header="${this.config.title}">
         
         <div class="stats-grid">
           <div class="stat-box cpu-box">
-            ${cpuPath ? html`
-              <svg class="sparkline" preserveAspectRatio="none" viewBox="0 0 100 100">
-                <path d="${cpuPath}" fill="rgba(33, 150, 243, 0.2)"></path>
-              </svg>
-            ` : ''}
+            ${this._cpuGraph ? html`<div class="graph-wrapper">${this._cpuGraph}</div>` : ''}
             <div class="stat-content">
-              <span class="stat-value">${cpuState ? cpuValue : '-'} %</span>
+              <span class="stat-value">${cpuValue} %</span>
               <span class="stat-name">CPU Auslastung</span>
             </div>
           </div>
           <div class="stat-box ram-box">
-            ${ramPath ? html`
-              <svg class="sparkline" preserveAspectRatio="none" viewBox="0 0 100 100">
-                <path d="${ramPath}" fill="rgba(156, 39, 176, 0.2)"></path>
-              </svg>
-            ` : ''}
+            ${this._ramGraph ? html`<div class="graph-wrapper">${this._ramGraph}</div>` : ''}
             <div class="stat-content">
-              <span class="stat-value">${ramState ? ramValue : '-'} %</span>
+              <span class="stat-value">${ramValue} %</span>
               <span class="stat-name">RAM Nutzung</span>
             </div>
           </div>
@@ -277,6 +247,7 @@ class ProxmoxCard extends LitElement {
   static get styles() {
     return css`
       .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; padding: 0 16px 20px 16px; }
+      
       .stat-box {
         position: relative; overflow: hidden; border-radius: 12px; padding: 24px 16px;
         background: var(--ha-card-background, #fff);
@@ -287,9 +258,14 @@ class ProxmoxCard extends LitElement {
       .cpu-box { border-color: rgba(33, 150, 243, 0.3); }
       .ram-box { border-color: rgba(156, 39, 176, 0.3); }
       
-      .sparkline {
-        position: absolute; bottom: 0; left: 0; width: 100%; height: 75%;
-        z-index: 0; pointer-events: none;
+      /* Wrapper überschreibt das Design der mini-graph-card, um sie unsichtbar zu machen */
+      .graph-wrapper {
+        position: absolute; bottom: -20px; left: -10px; right: -10px; height: 100%;
+        z-index: 0; opacity: 0.6; pointer-events: none;
+        --ha-card-background: transparent;
+        --ha-card-box-shadow: none;
+        --ha-card-border-width: 0;
+        --ha-card-border-radius: 0;
       }
 
       .stat-content { position: relative; z-index: 1; display: flex; flex-direction: column; text-shadow: 0 1px 2px rgba(255,255,255,0.8); }
