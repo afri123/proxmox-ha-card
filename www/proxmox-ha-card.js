@@ -1,6 +1,6 @@
 import { LitElement, html, css } from "https://unpkg.com/lit-element@2.4.0/lit-element.js?module";
 
-class ProxmoxCard extends LitElement {
+class ProxmoxHACard extends LitElement {
   static get properties() {
     return {
       hass: { type: Object },
@@ -185,11 +185,11 @@ class ProxmoxCard extends LitElement {
   }
 }
 
-customElements.define("proxmox-card", ProxmoxCard);
+customElements.define("proxmox-ha-card", ProxmoxHACard);
 
 window.customCards = window.customCards || [];
 window.customCards.push({
-  type: "proxmox-card",
-  name: "Proxmox Card",
+  type: "proxmox-ha-card",
+  name: "Proxmox HA Card",
   description: "Eine stylische Karte zur Steuerung von Proxmox VMs und CTs.",
 });
