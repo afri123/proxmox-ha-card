@@ -109,15 +109,16 @@ customElements.define("proxmox-ha-card-editor", ProxmoxCardEditor);
 class ProxmoxCard extends LitElement {
   constructor() {
     super();
-    this._historyCache = {};
-    this._lastHistoryFetch = 0;
+    this._historyCache = {}; // Frontend-only Buffer
+    this._lastUpdate = {};   // Tracking der letzten HA-Updates
+    this.MAX_POINTS = 30;    // Speichert die letzten 30 Datenpunkte
   }
 
   static get properties() {
     return { 
       hass: { type: Object }, 
       config: { type: Object },
-      _historyCache: { type: Object } // Löst Re-Render aus, wenn Historie geladen ist
+      _historyCache: { type: Object }
     };
   }
 
@@ -129,72 +130,67 @@ class ProxmoxCard extends LitElement {
     this.config = { title: "Proxmox", ...config };
   }
 
-  // Wird aufgerufen, sobald HA neue Daten schickt. Wir fangen es ab, um die Historie zu laden.
+  // Live-Tracking der Sensordaten OHNE Backend-API
   updated(changedProperties) {
     super.updated(changedProperties);
     if (changedProperties.has('hass')) {
-      this._fetchHistoryIfNeeded();
+      this._updateLocalHistory();
     }
   }
 
-  async _fetchHistoryIfNeeded() {
+  _updateLocalHistory() {
     if (!this.config || !this.hass) return;
-    const now = Date.now();
-    
-    // TIME GATE: Nur alle 5 Minuten (300.000 ms) die Datenbank belasten
-    if (now - this._lastHistoryFetch < 300000) return;
-    this._lastHistoryFetch = now;
+    let cacheChanged = false;
 
-    const cpu = this.config.node_cpu;
-    const ram = this.config.node_memory;
-    const entities = [cpu, ram].filter(e => e).join(',');
-    
-    if (!entities) return;
-
-    // Hole die Daten der letzten 12 Stunden für einen schönen, detaillierten Graphen
-    const start = new Date(now - 12 * 60 * 60 * 1000).toISOString();
-
-    try {
-      // Home Assistant History API Call
-      const res = await this.hass.callApi('GET', `history/period/${start}?filter_entity_id=${entities}&minimal_response`);
-      
-      if (res && res.length > 0) {
-        const newCache = { ...this._historyCache };
-        res.forEach(entityHistory => {
-          if (entityHistory.length > 0) {
-            // Extrahieren der Entity-ID und Map auf float-Werte
-            const entityId = entityHistory[0].entity_id || (entityHistory === res[0] ? cpu : ram);
-            const dataPoints = entityHistory.map(s => parseFloat(s.state)).filter(n => !isNaN(n));
-            newCache[entityId] = dataPoints;
+    [this.config.node_cpu, this.config.node_memory].forEach(entityId => {
+      if (entityId && this.hass.states[entityId]) {
+        const stateObj = this.hass.states[entityId];
+        
+        // Nur updaten, wenn sich der Zeitstempel (last_updated) wirklich geändert hat
+        if (this._lastUpdate[entityId] !== stateObj.last_updated) {
+          this._lastUpdate[entityId] = stateObj.last_updated;
+          const val = parseFloat(stateObj.state);
+          
+          if (!isNaN(val)) {
+            if (!this._historyCache[entityId]) this._historyCache[entityId] = [];
+            this._historyCache[entityId].push(val);
+            
+            // Verhindern, dass der Arbeitsspeicher überläuft
+            if (this._historyCache[entityId].length > this.MAX_POINTS) {
+              this._historyCache[entityId].shift();
+            }
+            cacheChanged = true;
           }
-        });
-        this._historyCache = newCache;
+        }
       }
-    } catch (e) {
-      console.error("Proxmox Card: History fetch failed. Stelle sicher, dass der Recorder läuft.", e);
+    });
+
+    if (cacheChanged) {
+      this._historyCache = { ...this._historyCache }; // Löst einen Re-Render aus
     }
   }
 
-  // Generiert den SVG Path String (Sparkline)
+  // Generiert den SVG Path String aus dem In-Memory-Array (baut sich von links nach rechts auf)
   _generateSparklinePath(entityId) {
     const data = this._historyCache[entityId];
     if (!data || data.length < 2) return "";
 
     const width = 100;
     const height = 100;
-    const step = width / (data.length - 1);
+    const step = width / (this.MAX_POINTS - 1);
     
-    // Start unten links
-    let path = `M 0,${height} `;
+    // Berechne Startpunkt, damit die Kurve sich von links nach rechts füllt
+    const startIndex = this.MAX_POINTS - data.length;
+
+    let path = `M ${startIndex * step},${height} `;
     
     data.forEach((val, i) => {
-      // Begrenze auf 100%
       const boundedVal = Math.min(Math.max(val, 0), 100);
       const y = height - (boundedVal / 100 * height);
-      path += `L ${i * step},${y} `;
+      const x = (startIndex + i) * step;
+      path += `L ${x},${y} `;
     });
     
-    // Schließe den Pfad unten rechts
     path += `L ${width},${height} Z`;
     return path;
   }
@@ -280,7 +276,6 @@ class ProxmoxCard extends LitElement {
 
   static get styles() {
     return css`
-      /* AdGuard Style Stat Boxes */
       .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; padding: 0 16px 20px 16px; }
       .stat-box {
         position: relative; overflow: hidden; border-radius: 12px; padding: 24px 16px;
@@ -292,7 +287,6 @@ class ProxmoxCard extends LitElement {
       .cpu-box { border-color: rgba(33, 150, 243, 0.3); }
       .ram-box { border-color: rgba(156, 39, 176, 0.3); }
       
-      /* SVG Sparkline Graph Styling */
       .sparkline {
         position: absolute; bottom: 0; left: 0; width: 100%; height: 75%;
         z-index: 0; pointer-events: none;
@@ -341,6 +335,6 @@ window.customCards = window.customCards || [];
 window.customCards.push({
   type: "proxmox-ha-card",
   name: "Proxmox HA Card",
-  description: "Stylische Karte zur Steuerung von Proxmox mit Historie-Graph.",
+  description: "Stylische Karte zur Steuerung von Proxmox mit Echtzeit-Graph.",
   preview: true
 });
