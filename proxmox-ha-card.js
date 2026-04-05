@@ -59,8 +59,10 @@ class ProxmoxCardEditor extends LitElement {
         
         <h3 style="margin-top: 16px; margin-bottom: 4px;">Karten Design</h3>
         <div class="grid-2">
-          <ha-textfield label="Box Rahmen (CSS)" .value="${this.config.box_border || ''}" .configValue="${'box_border'}" @input="${this._valueChanged}" placeholder="z.B. 1px solid var(--divider-color)"></ha-textfield>
-          <ha-textfield label="Box Schatten (CSS)" .value="${this.config.box_shadow || ''}" .configValue="${'box_shadow'}" @input="${this._valueChanged}" placeholder="z.B. 0 4px 8px rgba(0,0,0,0.1)"></ha-textfield>
+          <ha-textfield label="Stat-Box Rahmen (CSS)" .value="${this.config.box_border || ''}" .configValue="${'box_border'}" @input="${this._valueChanged}" placeholder="z.B. none"></ha-textfield>
+          <ha-textfield label="Stat-Box Schatten (CSS)" .value="${this.config.box_shadow || ''}" .configValue="${'box_shadow'}" @input="${this._valueChanged}" placeholder="z.B. 0 4px 8px rgba(0,0,0,0.1)"></ha-textfield>
+          <ha-textfield label="VM-Zeilen Rahmen (CSS)" .value="${this.config.vm_border || ''}" .configValue="${'vm_border'}" @input="${this._valueChanged}" placeholder="z.B. none"></ha-textfield>
+          <ha-textfield label="VM-Zeilen Schatten (CSS)" .value="${this.config.vm_shadow || ''}" .configValue="${'vm_shadow'}" @input="${this._valueChanged}" placeholder="z.B. 0 2px 8px rgba(0,0,0,0.05)"></ha-textfield>
         </div>
 
         <h3 style="margin-top: 16px; margin-bottom: 4px;">Node Sensoren & Graphen</h3>
@@ -85,7 +87,7 @@ class ProxmoxCardEditor extends LitElement {
             
             <div class="grid-2">
               <ha-textfield label="Anzeigename*" .value="${vm.name || ''}" @input="${(e) => this._vmChanged(index, 'name', e.target.value)}"></ha-textfield>
-              <ha-textfield label="Zeilen-Hintergrund (HEX/RGBA/var)" .value="${vm.bg_color || ''}" @input="${(e) => this._vmChanged(index, 'bg_color', e.target.value)}" placeholder="z.B. rgba(255,0,0,0.1)"></ha-textfield>
+              <ha-textfield label="Hintergrundfarbe (HEX/RGBA)" .value="${vm.bg_color || ''}" @input="${(e) => this._vmChanged(index, 'bg_color', e.target.value)}" placeholder="z.B. rgba(255,0,0,0.1)"></ha-textfield>
               <ha-icon-picker .hass=${this.hass} .value=${vm.icon || ''} label="MDI Icon" @value-changed=${(e) => this._vmChanged(index, 'icon', e.detail.value)}></ha-icon-picker>
               <ha-textfield label="Bild-URL (z.B. /local/logo.png)" .value="${vm.image || ''}" @input="${(e) => this._vmChanged(index, 'image', e.target.value)}"></ha-textfield>
               <ha-entity-picker .hass=${this.hass} .value=${vm.status || ''} label="Status (binary_sensor)" include-domains='["binary_sensor"]' @value-changed=${(e) => this._vmChanged(index, 'status', e.detail.value)} allow-custom-entity></ha-entity-picker>
@@ -139,7 +141,6 @@ class ProxmoxCard extends LitElement {
   setConfig(config) {
     if (!config.vms) throw new Error("Bitte konfiguriere die 'vms'.");
     this.config = { title: "Proxmox", ...config };
-    
     this._cpuGraph = null;
     this._ramGraph = null;
   }
@@ -200,10 +201,12 @@ class ProxmoxCard extends LitElement {
     const cpuValue = cpuState ? parseFloat(cpuState.state).toFixed(1) : '-';
     const ramValue = ramState ? parseFloat(ramState.state).toFixed(1) : '-';
 
-    // CSS Variablen für die Rahmen und Schatten definieren
+    // CSS Variablen für die Rahmen und Schatten beider Elemente
     const customStyles = `
       ${this.config.box_border ? `--custom-box-border: ${this.config.box_border};` : ''}
       ${this.config.box_shadow ? `--custom-box-shadow: ${this.config.box_shadow};` : ''}
+      ${this.config.vm_border ? `--custom-vm-border: ${this.config.vm_border};` : ''}
+      ${this.config.vm_shadow ? `--custom-vm-shadow: ${this.config.vm_shadow};` : ''}
     `;
 
     return html`
@@ -267,23 +270,16 @@ class ProxmoxCard extends LitElement {
       .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; padding: 0 16px 20px 16px; }
       
       .stat-box {
-        position: relative; 
-        overflow: hidden; 
-        border-radius: 12px; 
-        padding: 24px 16px;
+        position: relative; overflow: hidden; border-radius: 12px; padding: 24px 16px;
         background: var(--ha-card-background, #fff);
-        
-        /* Die CSS Variablen nutzen nun den Editor-Wert ODER unseren sauberen Standard */
         border: var(--custom-box-border, none);
         box-shadow: var(--custom-box-shadow, 0 10px 30px rgba(0, 0, 0, 0.08), 0 4px 8px rgba(0, 0, 0, 0.04));
-        
         display: flex; flex-direction: column; align-items: center; text-align: center;
         transition: transform 0.2s ease, box-shadow 0.2s ease;
       }
       
       .stat-box:hover {
         transform: translateY(-2px);
-        /* Wenn ein Custom-Shadow im Editor gesetzt wurde, bleibt dieser. Andernfalls der tiefere Standard-Schatten */
         box-shadow: var(--custom-box-shadow, 0 14px 36px rgba(0, 0, 0, 0.12), 0 6px 12px rgba(0, 0, 0, 0.06));
       }
       
@@ -302,15 +298,19 @@ class ProxmoxCard extends LitElement {
       
       .card-content { padding: 0 16px 16px 16px; }
       
-      .vm-list { display: flex; flex-direction: column; gap: 12px; }
+      .vm-list { display: flex; flex-direction: column; gap: 14px; }
       
       .vm-item { 
-        display: flex; align-items: center; padding: 10px; border-radius: 12px; 
-        background-color: var(--secondary-background-color); 
-        transition: background-color 0.2s, border-color 0.2s; 
-        border: 1px solid transparent; 
+        display: flex; align-items: center; padding: 12px 14px; border-radius: 12px; 
+        background-color: var(--ha-card-background, #fff); 
+        border: var(--custom-vm-border, none);
+        box-shadow: var(--custom-vm-shadow, 0 4px 12px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02));
+        transition: transform 0.2s ease, box-shadow 0.2s ease; 
       }
-      .vm-item:hover { border-color: var(--divider-color); filter: brightness(0.97); }
+      .vm-item:hover { 
+        transform: translateY(-2px);
+        box-shadow: var(--custom-vm-shadow, 0 8px 24px rgba(0, 0, 0, 0.08), 0 2px 6px rgba(0, 0, 0, 0.04));
+      }
       
       .vm-visual { width: 46px; height: 46px; margin-right: 16px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
       .vm-icon { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; border-radius: 50%; box-shadow: inset 0 0 0 1px rgba(0,0,0,0.05); }
