@@ -1,11 +1,14 @@
 import { LitElement, html, css } from "https://unpkg.com/lit-element@2.4.0/lit-element.js?module";
 
-// --- VISUELLER EDITOR ---
-class ProxmoxCardEditor extends LitElement {
+// --- VISUELLER EDITOR (AKKORDEON STYLE) ---
+class BatteryModernCardEditor extends LitElement {
   static get properties() { return { hass: {}, config: {} }; }
 
-  setConfig(config) { this.config = { ...config, vms: config.vms || [] }; }
+  setConfig(config) {
+    this.config = { ...config, entities: config.entities || [] };
+  }
 
+  // Hilfsfunktion für globale Werte
   _changeValue(field, value) {
     if (!this.config || !this.hass) return;
     if (this.config[field] === value) return;
@@ -13,23 +16,24 @@ class ProxmoxCardEditor extends LitElement {
     this._fireChanged();
   }
 
-  _vmChanged(index, field, value) {
-    const vms = [...this.config.vms];
-    vms[index] = { ...vms[index], [field]: value };
-    this.config = { ...this.config, vms };
+  // Hilfsfunktion für einzelne Batterien
+  _itemChanged(index, field, value) {
+    const entities = [...this.config.entities];
+    entities[index] = { ...entities[index], [field]: value };
+    this.config = { ...this.config, entities };
     this._fireChanged();
   }
 
-  _addVm() {
-    const vms = [...this.config.vms, { name: "Neue VM", status: "", start: "", stop: "", reboot: "", shutdown: "", icon: "", image: "", bg_color: "", border: "", shadow: "" }];
-    this.config = { ...this.config, vms };
+  _addEntity() {
+    const entities = [...this.config.entities, { entity: "", name: "", border: "", shadow: "", bg_color: "" }];
+    this.config = { ...this.config, entities };
     this._fireChanged();
   }
 
-  _removeVm(index) {
-    const vms = [...this.config.vms];
-    vms.splice(index, 1);
-    this.config = { ...this.config, vms };
+  _removeEntity(index) {
+    const entities = [...this.config.entities];
+    entities.splice(index, 1);
+    this.config = { ...this.config, entities };
     this._fireChanged();
   }
 
@@ -45,75 +49,48 @@ class ProxmoxCardEditor extends LitElement {
     return html`
       <div class="editor-container">
         
-        <ha-expansion-panel header="Karten-Titel & Design" outlined expanded>
+        <ha-expansion-panel header="Karten-Titel & Header Design" outlined expanded>
           <div class="panel-content">
             <div class="grid-2">
               <ha-textfield label="Karten-Titel" .value="${this.config.title || ''}" @input="${(e) => this._changeValue('title', e.target.value)}"></ha-textfield>
               <ha-icon-picker .hass=${this.hass} .value=${this.config.title_icon || ''} label="Titel Icon" @value-changed=${(e) => this._changeValue('title_icon', e.detail.value)}></ha-icon-picker>
-              <ha-textfield label="Titel-Farbe (CSS/var)" .value="${this.config.title_color || ''}" @input="${(e) => this._changeValue('title_color', e.target.value)}" placeholder="z.B. var(--primary-color)"></ha-textfield>
-              <ha-textfield label="Titel-Größe (z.B. 24px)" .value="${this.config.title_size || ''}" @input="${(e) => this._changeValue('title_size', e.target.value)}"></ha-textfield>
-              <ha-textfield label="Titel-Dicke (z.B. bold)" .value="${this.config.title_weight || ''}" @input="${(e) => this._changeValue('title_weight', e.target.value)}"></ha-textfield>
-            </div>
-          </div>
-        </ha-expansion-panel>
-        
-        <ha-expansion-panel header="CPU Box Design & Sensor" outlined>
-          <div class="panel-content">
-            <div class="grid-2">
-              <ha-entity-picker .hass=${this.hass} .value=${this.config.node_cpu || ""} label="CPU Sensor" include-domains='["sensor"]' @value-changed=${(e) => this._changeValue('node_cpu', e.detail.value)} allow-custom-entity></ha-entity-picker>
-              <ha-textfield label="Graph Farbe (HEX/RGBA)" .value="${this.config.cpu_color || '#2196f3'}" @input="${(e) => this._changeValue('cpu_color', e.target.value)}"></ha-textfield>
-              <ha-textfield label="Zahlen-Farbe (CSS)" .value="${this.config.cpu_value_color || ''}" @input="${(e) => this._changeValue('cpu_value_color', e.target.value)}" placeholder="z.B. #2196f3"></ha-textfield>
-              <ha-textfield label="Text-Farbe (CSS)" .value="${this.config.cpu_label_color || ''}" @input="${(e) => this._changeValue('cpu_label_color', e.target.value)}" placeholder="z.B. var(--secondary-text-color)"></ha-textfield>
-              <ha-textfield label="Box Rahmen (CSS)" .value="${this.config.cpu_border || ''}" @input="${(e) => this._changeValue('cpu_border', e.target.value)}"></ha-textfield>
-              <ha-textfield label="Box Schatten (CSS)" .value="${this.config.cpu_shadow || ''}" @input="${(e) => this._changeValue('cpu_shadow', e.target.value)}"></ha-textfield>
+              <ha-textfield label="Titel-Farbe (CSS)" .value="${this.config.title_color || ''}" @input="${(e) => this._changeValue('title_color', e.target.value)}" placeholder="var(--primary-color)"></ha-textfield>
+              <ha-textfield label="Titel-Größe" .value="${this.config.title_size || ''}" @input="${(e) => this._changeValue('title_size', e.target.value)}" placeholder="24px"></ha-textfield>
             </div>
           </div>
         </ha-expansion-panel>
 
-        <ha-expansion-panel header="RAM Box Design & Sensor" outlined>
+        <ha-expansion-panel header="Statistik-Boxen (Oben)" outlined>
           <div class="panel-content">
             <div class="grid-2">
-              <ha-entity-picker .hass=${this.hass} .value=${this.config.node_memory || ""} label="RAM Sensor" include-domains='["sensor"]' @value-changed=${(e) => this._changeValue('node_memory', e.detail.value)} allow-custom-entity></ha-entity-picker>
-              <ha-textfield label="Graph Farbe (HEX/RGBA)" .value="${this.config.ram_color || '#9c27b0'}" @input="${(e) => this._changeValue('ram_color', e.target.value)}"></ha-textfield>
-              <ha-textfield label="Zahlen-Farbe (CSS)" .value="${this.config.ram_value_color || ''}" @input="${(e) => this._changeValue('ram_value_color', e.target.value)}" placeholder="z.B. #9c27b0"></ha-textfield>
-              <ha-textfield label="Text-Farbe (CSS)" .value="${this.config.ram_label_color || ''}" @input="${(e) => this._changeValue('ram_label_color', e.target.value)}" placeholder="z.B. var(--secondary-text-color)"></ha-textfield>
-              <ha-textfield label="Box Rahmen (CSS)" .value="${this.config.ram_border || ''}" @input="${(e) => this._changeValue('ram_border', e.target.value)}"></ha-textfield>
-              <ha-textfield label="Box Schatten (CSS)" .value="${this.config.ram_shadow || ''}" @input="${(e) => this._changeValue('ram_shadow', e.target.value)}"></ha-textfield>
+              <ha-textfield label="Ø Box Rahmen" .value="${this.config.stat_border || ''}" @input="${(e) => this._changeValue('stat_border', e.target.value)}" placeholder="none"></ha-textfield>
+              <ha-textfield label="Ø Box Schatten" .value="${this.config.stat_shadow || ''}" @input="${(e) => this._changeValue('stat_shadow', e.target.value)}" placeholder="CSS Shadow"></ha-textfield>
+              <ha-textfield label="Zahlen-Farbe" .value="${this.config.stat_value_color || ''}" @input="${(e) => this._changeValue('stat_value_color', e.target.value)}"></ha-textfield>
+              <ha-textfield label="Label-Farbe" .value="${this.config.stat_label_color || ''}" @input="${(e) => this._changeValue('stat_label_color', e.target.value)}"></ha-textfield>
             </div>
           </div>
         </ha-expansion-panel>
 
-        <ha-expansion-panel header="Virtuelle Maschinen / Container (${this.config.vms.length})" outlined>
+        <ha-expansion-panel header="Batterien verwalten (${this.config.entities.length})" outlined>
           <div class="panel-content">
-            ${this.config.vms.map((vm, index) => html`
-              <ha-expansion-panel header="${vm.name || `VM ${index + 1}`}" outlined>
-                <div class="panel-content">
-                  <div class="vm-header" style="border: none; padding-bottom: 0; margin-bottom: 8px;">
-                    <button class="delete-btn" @click="${() => this._removeVm(index)}">
-                      <ha-icon icon="mdi:delete-outline"></ha-icon> Diese VM Löschen
-                    </button>
-                  </div>
+            ${this.config.entities.map((ent, index) => html`
+              <ha-expansion-panel header="${ent.name || ent.entity || `Batterie ${index + 1}`}" outlined style="margin-bottom: 8px;">
+                <div class="panel-content inner-panel">
                   <div class="grid-2">
-                    <ha-textfield label="Anzeigename*" .value="${vm.name || ''}" @input="${(e) => this._vmChanged(index, 'name', e.target.value)}"></ha-textfield>
-                    <ha-icon-picker .hass=${this.hass} .value=${vm.icon || ''} label="MDI Icon" @value-changed=${(e) => this._vmChanged(index, 'icon', e.detail.value)}></ha-icon-picker>
-                    
-                    <ha-textfield label="Zeilen-Hintergrund (CSS)" .value="${vm.bg_color || ''}" @input="${(e) => this._vmChanged(index, 'bg_color', e.target.value)}" placeholder="rgba(255,0,0,0.1)"></ha-textfield>
-                    <ha-textfield label="Bild-URL (/local/logo.png)" .value="${vm.image || ''}" @input="${(e) => this._vmChanged(index, 'image', e.target.value)}"></ha-textfield>
-                    
-                    <ha-textfield label="Zeilen-Rahmen (CSS)" .value="${vm.border || ''}" @input="${(e) => this._vmChanged(index, 'border', e.target.value)}" placeholder="1px solid var(--primary-color)"></ha-textfield>
-                    <ha-textfield label="Zeilen-Schatten (CSS)" .value="${vm.shadow || ''}" @input="${(e) => this._vmChanged(index, 'shadow', e.target.value)}" placeholder="0 4px 8px rgba(0,0,0,0.2)"></ha-textfield>
-
-                    <ha-entity-picker .hass=${this.hass} .value=${vm.status || ''} label="Status (binary_sensor)" include-domains='["binary_sensor"]' @value-changed=${(e) => this._vmChanged(index, 'status', e.detail.value)} allow-custom-entity></ha-entity-picker>
-                    <ha-entity-picker .hass=${this.hass} .value=${vm.start || ''} label="Start Button" include-domains='["button"]' @value-changed=${(e) => this._vmChanged(index, 'start', e.detail.value)} allow-custom-entity></ha-entity-picker>
-                    <ha-entity-picker .hass=${this.hass} .value=${vm.shutdown || ''} label="Shutdown Button" include-domains='["button"]' @value-changed=${(e) => this._vmChanged(index, 'shutdown', e.detail.value)} allow-custom-entity></ha-entity-picker>
-                    <ha-entity-picker .hass=${this.hass} .value=${vm.stop || ''} label="Stop Button" include-domains='["button"]' @value-changed=${(e) => this._vmChanged(index, 'stop', e.detail.value)} allow-custom-entity></ha-entity-picker>
-                    <ha-entity-picker .hass=${this.hass} .value=${vm.reboot || ''} label="Reboot Button" include-domains='["button"]' @value-changed=${(e) => this._vmChanged(index, 'reboot', e.detail.value)} allow-custom-entity></ha-entity-picker>
+                    <ha-entity-picker .hass=${this.hass} .value=${ent.entity} label="Sensor auswählen" include-domains='["sensor"]' @value-changed=${(e) => this._itemChanged(index, 'entity', e.detail.value)} allow-custom-entity></ha-entity-picker>
+                    <ha-textfield label="Anzeigename" .value="${ent.name || ''}" @input="${(e) => this._itemChanged(index, 'name', e.target.value)}"></ha-textfield>
+                    <ha-textfield label="Hintergrund (CSS)" .value="${ent.bg_color || ''}" @input="${(e) => this._itemChanged(index, 'bg_color', e.target.value)}" placeholder="rgba(0,0,0,0.1)"></ha-textfield>
+                    <ha-textfield label="Rahmen (CSS)" .value="${ent.border || ''}" @input="${(e) => this._itemChanged(index, 'border', e.target.value)}"></ha-textfield>
+                    <ha-textfield label="Schatten (CSS)" .value="${ent.shadow || ''}" @input="${(e) => this._itemChanged(index, 'shadow', e.target.value)}"></ha-textfield>
                   </div>
+                  <mwc-button @click="${() => this._removeEntity(index)}" style="--mdc-theme-primary: var(--error-color); width: 100%; margin-top: 10px;">
+                    <ha-icon icon="mdi:delete-outline"></ha-icon> Entfernen
+                  </mwc-button>
                 </div>
               </ha-expansion-panel>
             `)}
-            <mwc-button raised @click="${this._addVm}" style="margin-top: 8px;">
-              <ha-icon icon="mdi:plus"></ha-icon> VM / Container hinzufügen
+            <mwc-button raised @click="${this._addEntity}" style="width: 100%; margin-top: 10px;">
+              <ha-icon icon="mdi:plus"></ha-icon> Batterie hinzufügen
             </mwc-button>
           </div>
         </ha-expansion-panel>
@@ -125,113 +102,54 @@ class ProxmoxCardEditor extends LitElement {
   static get styles() {
     return css`
       .editor-container { display: flex; flex-direction: column; gap: 12px; }
-      .panel-content { padding: 16px 0; }
-      .delete-btn { background: none; border: none; color: var(--error-color); cursor: pointer; display: flex; align-items: center; gap: 4px; font-weight: 500; font-size: 14px; margin-left: auto; }
-      .delete-btn:hover { text-decoration: underline; }
+      .panel-content { padding: 12px 0; }
+      .inner-panel { padding: 10px; background: rgba(var(--rgb-primary-text-color), 0.02); border-radius: 4px; }
       .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: center; }
       ha-textfield, ha-entity-picker, ha-icon-picker { width: 100%; }
       mwc-button { --mdc-theme-primary: var(--primary-color); }
-      ha-expansion-panel { margin-bottom: 8px; }
+      ha-expansion-panel { margin-bottom: 4px; }
     `;
   }
 }
-customElements.define("proxmox-ha-card-editor", ProxmoxCardEditor);
+customElements.define("battery-modern-card-editor", BatteryModernCardEditor);
 
 // --- FRONTEND KARTE ---
-class ProxmoxCard extends LitElement {
-  constructor() {
-    super();
-    this._cpuGraph = null;
-    this._ramGraph = null;
-  }
-
+class BatteryModernCard extends LitElement {
   static get properties() {
-    return { 
-      hass: { type: Object }, 
-      config: { type: Object }
-    };
+    return { hass: { type: Object }, config: { type: Object } };
   }
 
-  static getConfigElement() { return document.createElement("proxmox-ha-card-editor"); }
-  static getStubConfig() { return { title: "Proxmox Node", vms: [] }; }
+  static getConfigElement() { return document.createElement("battery-modern-card-editor"); }
+  static getStubConfig() { return { title: "Batterien", entities: [] }; }
 
   setConfig(config) {
-    if (!config.vms) throw new Error("Bitte konfiguriere die 'vms'.");
-    this.config = { title: "Proxmox", ...config };
-    this._cpuGraph = null;
-    this._ramGraph = null;
+    this.config = config;
   }
 
-  set hass(hass) {
-    const oldHass = this._hass;
-    this._hass = hass;
-    if (this._cpuGraph) this._cpuGraph.hass = hass;
-    if (this._ramGraph) this._ramGraph.hass = hass;
-    this.requestUpdate('hass', oldHass);
+  _getBatteryIcon(value) {
+    if (value <= 10) return "mdi:battery-outline";
+    if (value <= 20) return "mdi:battery-20";
+    if (value <= 40) return "mdi:battery-40";
+    if (value <= 60) return "mdi:battery-60";
+    if (value <= 80) return "mdi:battery-80";
+    return "mdi:battery";
   }
 
-  get hass() { return this._hass; }
-
-  _createGraph(entityId, color) {
-    if (!entityId) return null;
-    const el = document.createElement("mini-graph-card");
-    el.setConfig({
-      entities: [entityId],
-      line_color: color,
-      line_width: 2,
-      hours_to_show: 24,
-      points_per_hour: 2,
-      group: true,
-      show: {
-        name: false, icon: false, state: false, 
-        labels: false, fill: true, points: false, legend: false
-      }
-    });
-    el.hass = this.hass;
-    return el;
-  }
-
-  _initGraphs() {
-    const cpuColor = this.config.cpu_color || "#2196f3";
-    const ramColor = this.config.ram_color || "#9c27b0";
-
-    if (!this._cpuGraph && this.config.node_cpu) {
-      this._cpuGraph = this._createGraph(this.config.node_cpu, cpuColor);
-    }
-    if (!this._ramGraph && this.config.node_memory) {
-      this._ramGraph = this._createGraph(this.config.node_memory, ramColor);
-    }
-  }
-
-  _handleAction(entityId) {
-    if (!entityId) return;
-    this.hass.callService("button", "press", { entity_id: entityId });
+  _getColor(value) {
+    if (value <= 20) return "var(--error-color)";
+    if (value <= 40) return "var(--warning-color)";
+    return "var(--success-color)";
   }
 
   render() {
     if (!this.hass || !this.config) return html``;
-    
-    this._initGraphs();
 
-    const cpuState = this.config.node_cpu ? this.hass.states[this.config.node_cpu] : null;
-    const ramState = this.config.node_memory ? this.hass.states[this.config.node_memory] : null;
-    
-    const cpuValue = cpuState ? parseFloat(cpuState.state).toFixed(1) : '-';
-    const ramValue = ramState ? parseFloat(ramState.state).toFixed(1) : '-';
+    const batteryValues = this.config.entities
+      .map(e => this.hass.states[e.entity] ? parseFloat(this.hass.states[e.entity].state) : null)
+      .filter(v => v !== null && !isNaN(v));
 
-    const cpuStyle = `
-      ${this.config.cpu_border ? `--custom-border: ${this.config.cpu_border};` : ''}
-      ${this.config.cpu_shadow ? `--custom-shadow: ${this.config.cpu_shadow};` : ''}
-    `;
-    const ramStyle = `
-      ${this.config.ram_border ? `--custom-border: ${this.config.ram_border};` : ''}
-      ${this.config.ram_shadow ? `--custom-shadow: ${this.config.ram_shadow};` : ''}
-    `;
-
-    const cpuValueStyle = this.config.cpu_value_color ? `color: ${this.config.cpu_value_color};` : '';
-    const cpuLabelStyle = this.config.cpu_label_color ? `color: ${this.config.cpu_label_color};` : '';
-    const ramValueStyle = this.config.ram_value_color ? `color: ${this.config.ram_value_color};` : '';
-    const ramLabelStyle = this.config.ram_label_color ? `color: ${this.config.ram_label_color};` : '';
+    const avg = batteryValues.length > 0 ? (batteryValues.reduce((a, b) => a + b, 0) / batteryValues.length).toFixed(0) : '-';
+    const critical = batteryValues.filter(v => v <= 20).length;
 
     const headerStyle = `
       ${this.config.title_color ? `color: ${this.config.title_color};` : ''}
@@ -239,63 +157,58 @@ class ProxmoxCard extends LitElement {
       ${this.config.title_weight ? `font-weight: ${this.config.title_weight};` : ''}
     `;
 
+    const statStyle = `
+      ${this.config.stat_border ? `--custom-border: ${this.config.stat_border};` : ''}
+      ${this.config.stat_shadow ? `--custom-shadow: ${this.config.stat_shadow};` : ''}
+    `;
+
     return html`
       <ha-card>
-        
-        ${this.config.title || this.config.title_icon ? html`
-          <div class="custom-header" style="${headerStyle}">
-            ${this.config.title_icon ? html`<ha-icon icon="${this.config.title_icon}" class="header-icon"></ha-icon>` : ''}
-            ${this.config.title}
-          </div>
-        ` : ''}
+        <div class="custom-header" style="${headerStyle}">
+          ${this.config.title_icon ? html`<ha-icon icon="${this.config.title_icon}" class="header-icon"></ha-icon>` : ''}
+          ${this.config.title || 'Batteriestatus'}
+        </div>
 
         <div class="stats-grid">
-          <div class="stat-box" style="${cpuStyle}">
-            ${this._cpuGraph ? html`<div class="graph-wrapper">${this._cpuGraph}</div>` : ''}
+          <div class="stat-box" style="${statStyle}">
             <div class="stat-content">
-              <span class="stat-value" style="${cpuValueStyle}">${cpuValue} %</span>
-              <span class="stat-name" style="${cpuLabelStyle}">CPU Auslastung</span>
+              <span class="stat-value" style="color: ${this.config.stat_value_color || ''}">${avg}%</span>
+              <span class="stat-name" style="color: ${this.config.stat_label_color || ''}">Ø Ladestand</span>
             </div>
           </div>
-          <div class="stat-box" style="${ramStyle}">
-            ${this._ramGraph ? html`<div class="graph-wrapper">${this._ramGraph}</div>` : ''}
+          <div class="stat-box" style="${statStyle} ${critical > 0 ? 'border-color: var(--error-color);' : ''}">
             <div class="stat-content">
-              <span class="stat-value" style="${ramValueStyle}">${ramValue} %</span>
-              <span class="stat-name" style="${ramLabelStyle}">RAM Nutzung</span>
+              <span class="stat-value" style="color: ${critical > 0 ? 'var(--error-color)' : (this.config.stat_value_color || '')}">${critical}</span>
+              <span class="stat-name" style="color: ${this.config.stat_label_color || ''}">Kritisch (<20%)</span>
             </div>
           </div>
         </div>
 
         <div class="card-content">
-          <div class="vm-list">
-            ${this.config.vms.map(vm => {
-              const statusEntity = vm.status ? this.hass.states[vm.status] : null;
-              const isRunning = statusEntity ? statusEntity.state === 'on' : false;
-
-              const visualTemplate = vm.image 
-                ? html`<img src="${vm.image}" class="vm-custom-image" alt="${vm.name}" />`
-                : html`<div class="vm-icon ${isRunning ? 'running' : 'stopped'}">
-                         <ha-icon icon="${vm.icon || (isRunning ? 'mdi:server-network' : 'mdi:server-network-off')}"></ha-icon>
-                       </div>`;
+          <div class="battery-list">
+            ${this.config.entities.map(ent => {
+              const stateObj = this.hass.states[ent.entity];
+              if (!stateObj) return html``;
+              const val = parseFloat(stateObj.state);
+              const name = ent.name || stateObj.attributes.friendly_name || ent.entity;
 
               const rowStyle = `
-                ${vm.bg_color ? `background-color: ${vm.bg_color};` : ''}
-                ${vm.border ? `--custom-border: ${vm.border};` : ''}
-                ${vm.shadow ? `--custom-shadow: ${vm.shadow};` : ''}
+                ${ent.bg_color ? `background-color: ${ent.bg_color};` : ''}
+                ${ent.border ? `--custom-border: ${ent.border};` : ''}
+                ${ent.shadow ? `--custom-shadow: ${ent.shadow};` : ''}
               `;
 
               return html`
-                <div class="vm-item" style="${rowStyle}">
-                  <div class="vm-visual">${visualTemplate}</div>
-                  <div class="vm-info">
-                    <div class="vm-name">${vm.name}</div>
-                    <div class="vm-status">${isRunning ? 'Läuft' : 'Gestoppt'}</div>
+                <div class="battery-item" style="${rowStyle}">
+                  <div class="battery-icon" style="color: ${this._getColor(val)}">
+                    <ha-icon icon="${this._getBatteryIcon(val)}"></ha-icon>
                   </div>
-                  <div class="vm-actions">
-                    <button class="action-btn" title="Start" ?disabled=${isRunning || !vm.start} @click=${() => this._handleAction(vm.start)}><ha-icon icon="mdi:play"></ha-icon></button>
-                    <button class="action-btn" title="Shutdown" ?disabled=${!isRunning || !vm.shutdown} @click=${() => this._handleAction(vm.shutdown)}><ha-icon icon="mdi:power"></ha-icon></button>
-                    <button class="action-btn" title="Stop" ?disabled=${!isRunning || !vm.stop} @click=${() => this._handleAction(vm.stop)}><ha-icon icon="mdi:stop"></ha-icon></button>
-                    <button class="action-btn" title="Reboot" ?disabled=${!isRunning || !vm.reboot} @click=${() => this._handleAction(vm.reboot)}><ha-icon icon="mdi:restart"></ha-icon></button>
+                  <div class="battery-info">
+                    <div class="battery-name">${name}</div>
+                    <div class="battery-status">${val <= 20 ? 'Schwach' : 'OK'}</div>
+                  </div>
+                  <div class="battery-value" style="color: ${this._getColor(val)}">
+                    ${val}%
                   </div>
                 </div>
               `;
@@ -308,105 +221,46 @@ class ProxmoxCard extends LitElement {
 
   static get styles() {
     return css`
-      .custom-header {
-        padding: 24px 16px 16px 16px;
-        font-size: 24px;
-        font-weight: 400;
-        color: var(--ha-card-header-color, var(--primary-text-color));
-        letter-spacing: -0.012em;
-        line-height: 32px;
-        display: flex;
-        align-items: center;
-        gap: 12px;
-      }
-      .header-icon {
-        --mdc-icon-size: 28px;
-        color: inherit;
-      }
-
-      .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; padding: 0 16px 20px 16px; }
+      .custom-header { padding: 24px 16px 16px; display: flex; align-items: center; gap: 12px; }
+      .header-icon { --mdc-icon-size: 28px; }
       
+      .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; padding: 0 16px 20px; }
       .stat-box {
-        position: relative; 
-        overflow: hidden; 
-        border-radius: 12px; 
-        padding: 24px 16px;
+        position: relative; overflow: hidden; border-radius: 12px; padding: 24px 16px;
         background: var(--ha-card-background, #fff);
-        
         border: var(--custom-border, none);
         box-shadow: var(--custom-shadow, 0 4px 12px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02));
-        
         display: flex; flex-direction: column; align-items: center; text-align: center;
-        transition: transform 0.2s ease, filter 0.2s ease, box-shadow 0.2s ease;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
       }
-      
-      .stat-box:hover {
-        transform: translateY(-2px);
-        filter: brightness(0.98);
-        box-shadow: var(--custom-shadow, 0 8px 24px rgba(0, 0, 0, 0.08), 0 2px 6px rgba(0, 0, 0, 0.04));
-      }
-      
-      .graph-wrapper {
-        position: absolute; bottom: -2px; left: 0; right: 0; 
-        z-index: 0; opacity: 0.6; pointer-events: none;
-      }
+      .stat-box:hover { transform: translateY(-2px); filter: brightness(0.98); }
+      .stat-value { font-size: 2.2rem; font-weight: 500; line-height: 1.2; }
+      .stat-name { font-size: 0.85rem; color: var(--secondary-text-color); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
 
-      .stat-content { position: relative; z-index: 1; display: flex; flex-direction: column; text-shadow: 0 1px 2px rgba(255,255,255,0.8); }
-      .stat-value { font-size: 2.2rem; color: var(--primary-text-color); font-weight: 500; line-height: 1.2; }
-      .stat-name { font-size: 0.85rem; color: var(--secondary-text-color); margin-top: 4px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
-      
-      .card-content { padding: 0 16px 16px 16px; }
-      
-      .vm-list { display: flex; flex-direction: column; gap: 14px; }
-      
-      .vm-item { 
-        display: flex; align-items: center; padding: 12px 14px; border-radius: 12px; 
-        background: var(--ha-card-background, #fff); 
-        
+      .card-content { padding: 0 16px 16px; }
+      .battery-list { display: flex; flex-direction: column; gap: 14px; }
+      .battery-item {
+        display: flex; align-items: center; padding: 12px 14px; border-radius: 12px;
+        background: var(--ha-card-background, #fff);
         border: var(--custom-border, none);
         box-shadow: var(--custom-shadow, 0 4px 12px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02));
-        
-        transition: transform 0.2s ease, filter 0.2s ease, box-shadow 0.2s ease; 
+        transition: transform 0.2s ease, filter 0.2s ease;
       }
-      .vm-item:hover { 
-        transform: translateY(-2px);
-        filter: brightness(0.97);
-        box-shadow: var(--custom-shadow, 0 8px 24px rgba(0, 0, 0, 0.08), 0 2px 6px rgba(0, 0, 0, 0.04));
-      }
-      
-      .vm-visual { width: 46px; height: 46px; margin-right: 16px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-      .vm-icon { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; border-radius: 50%; box-shadow: inset 0 0 0 1px rgba(0,0,0,0.05); }
-      .vm-icon.running { background-color: rgba(76, 175, 80, 0.15); color: #4caf50; }
-      .vm-icon.stopped { background-color: rgba(244, 67, 54, 0.15); color: #f44336; }
-      .vm-custom-image { width: 100%; height: 100%; object-fit: contain; border-radius: 6px; }
-      
-      .vm-info { flex-grow: 1; overflow: hidden; }
-      .vm-name { font-weight: 600; font-size: 1rem; color: var(--primary-text-color); white-space: nowrap; text-overflow: ellipsis; overflow: hidden; margin-bottom: 2px; }
-      .vm-status { font-size: 0.8rem; color: var(--secondary-text-color); font-weight: 500; }
-      
-      .vm-actions { display: flex; gap: 6px; }
-      
-      .action-btn {
-        display: flex; justify-content: center; align-items: center;
-        width: 38px; height: 38px; border-radius: 8px; border: none; cursor: pointer;
-        background-color: var(--card-background-color, #fff);
-        box-shadow: 0 2px 5px rgba(0,0,0,0.1), 0 1px 1px rgba(0,0,0,0.05);
-        color: var(--primary-text-color);
-        transition: all 0.2s ease;
-      }
-      .action-btn ha-icon { --mdc-icon-size: 20px; }
-      .action-btn:hover:not(:disabled) { box-shadow: 0 4px 8px rgba(0,0,0,0.15), 0 1px 3px rgba(0,0,0,0.1); transform: translateY(-2px); color: var(--primary-color); }
-      .action-btn:disabled { opacity: 0.4; cursor: not-allowed; box-shadow: none; background-color: transparent; border: 1px solid var(--divider-color); }
+      .battery-item:hover { transform: translateY(-2px); filter: brightness(0.97); }
+      .battery-icon { margin-right: 16px; }
+      .battery-info { flex-grow: 1; overflow: hidden; }
+      .battery-name { font-weight: 600; font-size: 1rem; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; }
+      .battery-status { font-size: 0.8rem; color: var(--secondary-text-color); font-weight: 500; }
+      .battery-value { font-weight: bold; font-size: 1.1rem; }
     `;
   }
 }
-
-customElements.define("proxmox-ha-card", ProxmoxCard);
+customElements.define("battery-modern-card", BatteryModernCard);
 
 window.customCards = window.customCards || [];
 window.customCards.push({
-  type: "proxmox-ha-card",
-  name: "Proxmox HA Card",
-  description: "Stylische Karte zur Steuerung von Proxmox mit anpassbaren Headern und Element-Designs.",
+  type: "battery-modern-card",
+  name: "Battery Modern Card",
+  description: "Stylische Karte zur Überwachung von Batterien mit Akkordeon-Editor.",
   preview: true
 });
