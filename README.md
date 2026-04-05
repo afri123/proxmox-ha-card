@@ -23,21 +23,21 @@ Before using this card, you **must** install and configure the excellent backend
 ### Method 1: HACS (Recommended)
 Since this is a Lovelace UI card, you need to add it as a custom frontend repository in HACS.
 
-[![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=afri123&repository=proxmox-ha&category=plugin)
+[![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=afri123&repository=proxmox-ha-card&category=plugin)
 
 1. Open Home Assistant and navigate to **HACS → Frontend**.
 2. Click the three dots in the top right corner and select **Custom repositories**.
-3. Add the URL of this repository: `https://github.com/afri123/proxmox-ha`
+3. Add the URL of this repository: `https://github.com/afri123/proxmox-ha-card`
 4. Select Category: **Lovelace**.
-5. Click **Add**, then find "Proxmox Card" in the list and click **Download**.
+5. Click **Add**, then find "Proxmox HA Card" in the list and click **Download**.
 6. When prompted, reload your browser.
 
 ### Method 2: Manual
-1. Download the `proxmox-card.js` file from the `www` folder of this repository.
+1. Download the `proxmox-ha-card.js` file from the `www` folder of this repository.
 2. Copy it into your Home Assistant's `config/www` directory.
 3. Go to **Settings → Dashboards → Three dots (top right) → Resources**.
 4. Add a new resource:
-   - URL: `/local/proxmox-card.js`
+   - URL: `/local/proxmox-ha-card.js`
    - Resource type: `JavaScript Module`
 
 ## ⚙️ Configuration
@@ -47,7 +47,7 @@ Once installed, you can add the card to your Lovelace dashboard using the manual
 Here is a full configuration example:
 
 ```yaml
-type: custom:proxmox-card
+type: custom:proxmox-ha-card
 title: Proxmox Node 1
 # Global Node Sensors
 node_cpu: sensor.pve_cpu_usage
@@ -77,7 +77,7 @@ vms:
 
 | Name | Type | Requirement | Description |
 |------|------|-------------|-------------|
-| `type` | string | **Required** | Must be `custom:proxmox-card` |
+| `type` | string | **Required** | Must be `custom:proxmox-ha-card` |
 | `title` | string | Optional | The header title of the card |
 | `node_cpu` | string | Optional | Entity ID for the node's CPU usage sensor |
 | `node_memory`| string | Optional | Entity ID for the node's memory usage sensor |
