@@ -91,6 +91,8 @@ vms:
 | `node_memory`| string | Optional | Entity ID for the node's memory usage sensor |
 | `ram_color`| string | Optional | Color of the RAM graph (HEX/RGBA/var). Default: `#9c27b0` |
 | `vms` | list | **Required** | A list of VMs/Containers to display |
+| `vm_border`  | string | Optional | Global CSS border for VM list items (e.g. `1px solid var(--divider-color)`). Default: `none` |
+| `vm_shadow`  | string | Optional | Global CSS box-shadow for VM list items (e.g. `none` or `0 4px 8px rgba(0,0,0,0.1)`). Default is a soft 3D shadow. |
 
 ## 🐛 Troubleshooting
 - **"Custom element doesn't exist"**: Ensure you have added the resource correctly in the dashboard settings and cleared your browser cache.
