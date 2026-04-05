@@ -205,7 +205,6 @@ class ProxmoxCard extends LitElement {
     const cpuValue = cpuState ? parseFloat(cpuState.state).toFixed(1) : '-';
     const ramValue = ramState ? parseFloat(ramState.state).toFixed(1) : '-';
 
-    // Individuelle Styles für CPU und RAM Boxen generieren
     const cpuStyle = `
       ${this.config.cpu_border ? `--custom-border: ${this.config.cpu_border};` : ''}
       ${this.config.cpu_shadow ? `--custom-shadow: ${this.config.cpu_shadow};` : ''}
@@ -247,7 +246,6 @@ class ProxmoxCard extends LitElement {
                          <ha-icon icon="${vm.icon || (isRunning ? 'mdi:server-network' : 'mdi:server-network-off')}"></ha-icon>
                        </div>`;
 
-              // Individuelle Styles für jede VM-Zeile generieren
               const rowStyle = `
                 ${vm.bg_color ? `background-color: ${vm.bg_color};` : ''}
                 ${vm.border ? `--custom-border: ${vm.border};` : ''}
@@ -287,17 +285,19 @@ class ProxmoxCard extends LitElement {
         padding: 24px 16px;
         background: var(--ha-card-background, #fff);
         
-        /* Die CSS Variablen steuern jetzt individuell jedes Element! */
         border: var(--custom-border, none);
-        box-shadow: var(--custom-shadow, 0 10px 30px rgba(0, 0, 0, 0.08), 0 4px 8px rgba(0, 0, 0, 0.04));
+        /* ANGEPASST: Schatten entspricht jetzt den VM-Zeilen (dezenter) */
+        box-shadow: var(--custom-shadow, 0 4px 12px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02));
         
         display: flex; flex-direction: column; align-items: center; text-align: center;
-        transition: transform 0.2s ease, filter 0.2s ease;
+        transition: transform 0.2s ease, filter 0.2s ease, box-shadow 0.2s ease;
       }
       
       .stat-box:hover {
         transform: translateY(-2px);
         filter: brightness(0.98);
+        /* ANGEPASST: Hover-Schatten entspricht jetzt den VM-Zeilen */
+        box-shadow: var(--custom-shadow, 0 8px 24px rgba(0, 0, 0, 0.08), 0 2px 6px rgba(0, 0, 0, 0.04));
       }
       
       .graph-wrapper {
@@ -324,11 +324,12 @@ class ProxmoxCard extends LitElement {
         border: var(--custom-border, none);
         box-shadow: var(--custom-shadow, 0 4px 12px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02));
         
-        transition: transform 0.2s ease, filter 0.2s ease; 
+        transition: transform 0.2s ease, filter 0.2s ease, box-shadow 0.2s ease; 
       }
       .vm-item:hover { 
         transform: translateY(-2px);
         filter: brightness(0.97);
+        box-shadow: var(--custom-shadow, 0 8px 24px rgba(0, 0, 0, 0.08), 0 2px 6px rgba(0, 0, 0, 0.04));
       }
       
       .vm-visual { width: 46px; height: 46px; margin-right: 16px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
