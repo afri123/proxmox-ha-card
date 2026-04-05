@@ -85,7 +85,9 @@ vms:
 | `type` | string | **Required** | Must be `custom:proxmox-ha-card` |
 | `title` | string | Optional | The header title of the card |
 | `node_cpu` | string | Optional | Entity ID for the node's CPU usage sensor |
+| `cpu_color`| string | Optional | Color of the CPU graph (HEX/RGBA/var). Default: `#2196f3` |
 | `node_memory`| string | Optional | Entity ID for the node's memory usage sensor |
+| `ram_color`| string | Optional | Color of the RAM graph (HEX/RGBA/var). Default: `#9c27b0` |
 | `vms` | list | **Required** | A list of VMs/Containers to display |
 
 #### VM/CT Variables (`vms` list)
@@ -93,6 +95,7 @@ vms:
 | Name | Type | Requirement | Description |
 |------|------|-------------|-------------|
 | `name` | string | **Required** | Display name for the VM/CT |
+| `bg_color`| string | Optional | Custom background color for this row (e.g. `rgba(255,0,0,0.1)`) |
 | `icon` | string | Optional | Custom MDI Icon (e.g. `mdi:ubuntu`) |
 | `image`| string | Optional | URL to a custom image file (overrides icon) |
 | `status` | string | Optional | `binary_sensor` representing the running state |
