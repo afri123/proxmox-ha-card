@@ -1,6 +1,7 @@
 # Proxmox Lovelace Card for Home Assistant
 
 [![hacs_badge](https://img.shields.io/badge/HACS-Custom-41BDF5.svg?style=for-the-badge)](https://github.com/hacs/integration)
+[![GitHub release (latest by date)](https://img.shields.io/github/v/release/afri123/proxmox-ha-card?style=for-the-badge)](https://github.com/afri123/proxmox-ha-card/releases)
 
 A modern, fast, and aesthetically pleasing custom card for Home Assistant to monitor and control your Proxmox Virtual Environment. Inspired by the clean look of the AdGuard card.
 
