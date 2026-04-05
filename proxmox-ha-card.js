@@ -168,6 +168,7 @@ class ProxmoxCard extends LitElement {
       line_width: 2,
       hours_to_show: 24,
       points_per_hour: 2,
+      group: true, // WICHTIG: Zwingt mini-graph-card, alle Ränder und Hintergründe abzuwerfen
       show: {
         name: false, icon: false, state: false, 
         labels: false, fill: true, points: false, legend: false
@@ -286,7 +287,6 @@ class ProxmoxCard extends LitElement {
         background: var(--ha-card-background, #fff);
         
         border: var(--custom-border, none);
-        /* ANGEPASST: Schatten entspricht jetzt den VM-Zeilen (dezenter) */
         box-shadow: var(--custom-shadow, 0 4px 12px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02));
         
         display: flex; flex-direction: column; align-items: center; text-align: center;
@@ -296,17 +296,18 @@ class ProxmoxCard extends LitElement {
       .stat-box:hover {
         transform: translateY(-2px);
         filter: brightness(0.98);
-        /* ANGEPASST: Hover-Schatten entspricht jetzt den VM-Zeilen */
         box-shadow: var(--custom-shadow, 0 8px 24px rgba(0, 0, 0, 0.08), 0 2px 6px rgba(0, 0, 0, 0.04));
       }
       
+      /* Angepasster Wrapper, damit er flexibel den unteren Rand perfekt füllt */
       .graph-wrapper {
-        position: absolute; bottom: -20px; left: -10px; right: -10px; height: 100%;
-        z-index: 0; opacity: 0.6; pointer-events: none;
-        --ha-card-background: transparent;
-        --ha-card-box-shadow: none;
-        --ha-card-border-width: 0;
-        --ha-card-border-radius: 0;
+        position: absolute; 
+        bottom: -2px; /* Zieht den Graph minimal tiefer um weiße Blitzer zu vermeiden */
+        left: 0; 
+        right: 0; 
+        z-index: 0; 
+        opacity: 0.6; 
+        pointer-events: none;
       }
 
       .stat-content { position: relative; z-index: 1; display: flex; flex-direction: column; text-shadow: 0 1px 2px rgba(255,255,255,0.8); }
@@ -319,7 +320,7 @@ class ProxmoxCard extends LitElement {
       
       .vm-item { 
         display: flex; align-items: center; padding: 12px 14px; border-radius: 12px; 
-        background-color: var(--ha-card-background, #fff); 
+        background: var(--ha-card-background, #fff); 
         
         border: var(--custom-border, none);
         box-shadow: var(--custom-shadow, 0 4px 12px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02));
