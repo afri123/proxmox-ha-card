@@ -57,6 +57,12 @@ class ProxmoxCardEditor extends LitElement {
       <div class="editor-container">
         <ha-textfield label="Karten-Titel (optional)" .value="${this.config.title || ''}" .configValue="${'title'}" @input="${this._valueChanged}"></ha-textfield>
         
+        <h3 style="margin-top: 16px; margin-bottom: 4px;">Karten Design</h3>
+        <div class="grid-2">
+          <ha-textfield label="Box Rahmen (CSS)" .value="${this.config.box_border || ''}" .configValue="${'box_border'}" @input="${this._valueChanged}" placeholder="z.B. 1px solid var(--divider-color)"></ha-textfield>
+          <ha-textfield label="Box Schatten (CSS)" .value="${this.config.box_shadow || ''}" .configValue="${'box_shadow'}" @input="${this._valueChanged}" placeholder="z.B. 0 4px 8px rgba(0,0,0,0.1)"></ha-textfield>
+        </div>
+
         <h3 style="margin-top: 16px; margin-bottom: 4px;">Node Sensoren & Graphen</h3>
         <div class="grid-2">
           <ha-entity-picker .hass=${this.hass} .value=${this.config.node_cpu || ""} label="Node CPU Sensor" include-domains='["sensor"]' @value-changed=${(e) => this._entityValueChanged(e, 'node_cpu')} allow-custom-entity></ha-entity-picker>
@@ -194,22 +200,24 @@ class ProxmoxCard extends LitElement {
     const cpuValue = cpuState ? parseFloat(cpuState.state).toFixed(1) : '-';
     const ramValue = ramState ? parseFloat(ramState.state).toFixed(1) : '-';
 
-    // Setze die Rahmenfarbe der Boxen passend zur Graph-Farbe
-    const cpuBorder = `border-color: ${this.config.cpu_color || '#2196f3'};`;
-    const ramBorder = `border-color: ${this.config.ram_color || '#9c27b0'};`;
+    // CSS Variablen für die Rahmen und Schatten definieren
+    const customStyles = `
+      ${this.config.box_border ? `--custom-box-border: ${this.config.box_border};` : ''}
+      ${this.config.box_shadow ? `--custom-box-shadow: ${this.config.box_shadow};` : ''}
+    `;
 
     return html`
-      <ha-card header="${this.config.title}">
+      <ha-card header="${this.config.title}" style="${customStyles}">
         
         <div class="stats-grid">
-          <div class="stat-box" style="${cpuBorder}">
+          <div class="stat-box">
             ${this._cpuGraph ? html`<div class="graph-wrapper">${this._cpuGraph}</div>` : ''}
             <div class="stat-content">
               <span class="stat-value">${cpuValue} %</span>
               <span class="stat-name">CPU Auslastung</span>
             </div>
           </div>
-          <div class="stat-box" style="${ramBorder}">
+          <div class="stat-box">
             ${this._ramGraph ? html`<div class="graph-wrapper">${this._ramGraph}</div>` : ''}
             <div class="stat-content">
               <span class="stat-value">${ramValue} %</span>
@@ -230,7 +238,6 @@ class ProxmoxCard extends LitElement {
                          <ha-icon icon="${vm.icon || (isRunning ? 'mdi:server-network' : 'mdi:server-network-off')}"></ha-icon>
                        </div>`;
 
-              // Individueller Zeilen-Hintergrund
               const rowStyle = vm.bg_color ? `background-color: ${vm.bg_color};` : '';
 
               return html`
@@ -260,11 +267,24 @@ class ProxmoxCard extends LitElement {
       .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; padding: 0 16px 20px 16px; }
       
       .stat-box {
-        position: relative; overflow: hidden; border-radius: 12px; padding: 24px 16px;
+        position: relative; 
+        overflow: hidden; 
+        border-radius: 12px; 
+        padding: 24px 16px;
         background: var(--ha-card-background, #fff);
-        border: 1px solid var(--divider-color, #e0e0e0);
-        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        
+        /* Die CSS Variablen nutzen nun den Editor-Wert ODER unseren sauberen Standard */
+        border: var(--custom-box-border, none);
+        box-shadow: var(--custom-box-shadow, 0 10px 30px rgba(0, 0, 0, 0.08), 0 4px 8px rgba(0, 0, 0, 0.04));
+        
         display: flex; flex-direction: column; align-items: center; text-align: center;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+      }
+      
+      .stat-box:hover {
+        transform: translateY(-2px);
+        /* Wenn ein Custom-Shadow im Editor gesetzt wurde, bleibt dieser. Andernfalls der tiefere Standard-Schatten */
+        box-shadow: var(--custom-box-shadow, 0 14px 36px rgba(0, 0, 0, 0.12), 0 6px 12px rgba(0, 0, 0, 0.06));
       }
       
       .graph-wrapper {
