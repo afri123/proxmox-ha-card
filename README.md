@@ -48,26 +48,22 @@ Here is a full configuration example:
 
 ```yaml
 type: custom:proxmox-ha-card
-title: Proxmox Node 1
-# Global Node Sensors
-node_cpu: sensor.pve_cpu_usage
-node_memory: sensor.pve_memory_usage
-# List your Virtual Machines and Containers
+title: Node Proxmox
+node_cpu: sensor.node_proxmox_cpu_auslastung
+node_memory: sensor.node_proxmox_genutzter_arbeitsspeicher
 vms:
-  - name: Home Assistant (VM 100)
-    status: binary_sensor.pve_qemu_100_running
+  - name: Home Assistant (VM 200)
+    status: binary_sensor.qemu_haos_200_status
     start: button.pve_qemu_100_start
     stop: button.pve_qemu_100_stop
     reboot: button.pve_qemu_100_reboot
-    
-  - name: Pi-hole (CT 101)
-    status: binary_sensor.pve_lxc_101_running
+  - name: Docker / Portainer (VM)
+    status: binary_sensor.qemu_docker_300_status
     start: button.pve_lxc_101_start
     stop: button.pve_lxc_101_stop
     reboot: button.pve_lxc_101_reboot
-    
-  - name: Docker Host (VM 102)
-    status: binary_sensor.pve_qemu_102_running
+  - name: AdGuard Home (CT 102)
+    status: binary_sensor.lxc_adguard_102_status
     start: button.pve_qemu_102_start
     stop: button.pve_qemu_102_stop
     reboot: button.pve_qemu_102_reboot
