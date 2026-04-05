@@ -6,21 +6,11 @@ class ProxmoxCardEditor extends LitElement {
 
   setConfig(config) { this.config = { ...config, vms: config.vms || [] }; }
 
-  _valueChanged(ev) {
+  // Kugelsichere Speicherung für den Editor
+  _changeValue(field, value) {
     if (!this.config || !this.hass) return;
-    const target = ev.target;
-    if (this[`_${target.configValue}`] === target.value) return;
-    if (target.configValue) {
-      this.config = { ...this.config, [target.configValue]: target.value };
-      this._fireChanged();
-    }
-  }
-
-  _entityValueChanged(ev, configKey) {
-    if (!this.config || !this.hass) return;
-    const value = ev.detail.value;
-    if (this.config[configKey] === value) return;
-    this.config = { ...this.config, [configKey]: value };
+    if (this.config[field] === value) return;
+    this.config = { ...this.config, [field]: value };
     this._fireChanged();
   }
 
@@ -58,26 +48,26 @@ class ProxmoxCardEditor extends LitElement {
         
         <h3 style="margin-top: 8px; margin-bottom: 4px;">Karten-Titel & Design</h3>
         <div class="grid-2">
-          <ha-textfield label="Titel Text" .value="${this.config.title || ''}" .configValue="${'title'}" @input="${this._valueChanged}"></ha-textfield>
-          <ha-textfield label="Schriftfarbe (CSS/var)" .value="${this.config.title_color || ''}" .configValue="${'title_color'}" @input="${this._valueChanged}" placeholder="z.B. var(--primary-color)"></ha-textfield>
-          <ha-textfield label="Schriftgröße (CSS)" .value="${this.config.title_size || ''}" .configValue="${'title_size'}" @input="${this._valueChanged}" placeholder="z.B. 24px oder 1.5rem"></ha-textfield>
-          <ha-textfield label="Schriftgewicht" .value="${this.config.title_weight || ''}" .configValue="${'title_weight'}" @input="${this._valueChanged}" placeholder="z.B. bold oder 600"></ha-textfield>
+          <ha-textfield label="Karten-Titel" .value="${this.config.title || ''}" @input="${(e) => this._changeValue('title', e.target.value)}"></ha-textfield>
+          <ha-textfield label="Titel-Farbe (CSS/var)" .value="${this.config.title_color || ''}" @input="${(e) => this._changeValue('title_color', e.target.value)}" placeholder="z.B. var(--primary-color)"></ha-textfield>
+          <ha-textfield label="Titel-Größe (z.B. 24px)" .value="${this.config.title_size || ''}" @input="${(e) => this._changeValue('title_size', e.target.value)}"></ha-textfield>
+          <ha-textfield label="Titel-Dicke (z.B. bold)" .value="${this.config.title_weight || ''}" @input="${(e) => this._changeValue('title_weight', e.target.value)}"></ha-textfield>
         </div>
         
         <h3 style="margin-top: 16px; margin-bottom: 4px;">CPU Box Design & Sensor</h3>
         <div class="grid-2">
-          <ha-entity-picker .hass=${this.hass} .value=${this.config.node_cpu || ""} label="CPU Sensor" include-domains='["sensor"]' @value-changed=${(e) => this._entityValueChanged(e, 'node_cpu')} allow-custom-entity></ha-entity-picker>
-          <ha-textfield label="Graph Farbe (HEX/RGBA)" .value="${this.config.cpu_color || '#2196f3'}" .configValue="${'cpu_color'}" @input="${this._valueChanged}"></ha-textfield>
-          <ha-textfield label="Box Rahmen (z.B. 1px solid red)" .value="${this.config.cpu_border || ''}" .configValue="${'cpu_border'}" @input="${this._valueChanged}"></ha-textfield>
-          <ha-textfield label="Box Schatten (CSS)" .value="${this.config.cpu_shadow || ''}" .configValue="${'cpu_shadow'}" @input="${this._valueChanged}"></ha-textfield>
+          <ha-entity-picker .hass=${this.hass} .value=${this.config.node_cpu || ""} label="CPU Sensor" include-domains='["sensor"]' @value-changed=${(e) => this._changeValue('node_cpu', e.detail.value)} allow-custom-entity></ha-entity-picker>
+          <ha-textfield label="Graph Farbe (HEX/RGBA)" .value="${this.config.cpu_color || '#2196f3'}" @input="${(e) => this._changeValue('cpu_color', e.target.value)}"></ha-textfield>
+          <ha-textfield label="Box Rahmen (z.B. 1px solid red)" .value="${this.config.cpu_border || ''}" @input="${(e) => this._changeValue('cpu_border', e.target.value)}"></ha-textfield>
+          <ha-textfield label="Box Schatten (CSS)" .value="${this.config.cpu_shadow || ''}" @input="${(e) => this._changeValue('cpu_shadow', e.target.value)}"></ha-textfield>
         </div>
 
         <h3 style="margin-top: 16px; margin-bottom: 4px;">RAM Box Design & Sensor</h3>
         <div class="grid-2">
-          <ha-entity-picker .hass=${this.hass} .value=${this.config.node_memory || ""} label="RAM Sensor" include-domains='["sensor"]' @value-changed=${(e) => this._entityValueChanged(e, 'node_memory')} allow-custom-entity></ha-entity-picker>
-          <ha-textfield label="Graph Farbe (HEX/RGBA)" .value="${this.config.ram_color || '#9c27b0'}" .configValue="${'ram_color'}" @input="${this._valueChanged}"></ha-textfield>
-          <ha-textfield label="Box Rahmen (CSS)" .value="${this.config.ram_border || ''}" .configValue="${'ram_border'}" @input="${this._valueChanged}"></ha-textfield>
-          <ha-textfield label="Box Schatten (CSS)" .value="${this.config.ram_shadow || ''}" .configValue="${'ram_shadow'}" @input="${this._valueChanged}"></ha-textfield>
+          <ha-entity-picker .hass=${this.hass} .value=${this.config.node_memory || ""} label="RAM Sensor" include-domains='["sensor"]' @value-changed=${(e) => this._changeValue('node_memory', e.detail.value)} allow-custom-entity></ha-entity-picker>
+          <ha-textfield label="Graph Farbe (HEX/RGBA)" .value="${this.config.ram_color || '#9c27b0'}" @input="${(e) => this._changeValue('ram_color', e.target.value)}"></ha-textfield>
+          <ha-textfield label="Box Rahmen (CSS)" .value="${this.config.ram_border || ''}" @input="${(e) => this._changeValue('ram_border', e.target.value)}"></ha-textfield>
+          <ha-textfield label="Box Schatten (CSS)" .value="${this.config.ram_shadow || ''}" @input="${(e) => this._changeValue('ram_shadow', e.target.value)}"></ha-textfield>
         </div>
 
         <h3 style="margin-top: 24px; margin-bottom: 8px;">Virtuelle Maschinen / Container</h3>
@@ -222,7 +212,7 @@ class ProxmoxCard extends LitElement {
       ${this.config.ram_shadow ? `--custom-shadow: ${this.config.ram_shadow};` : ''}
     `;
 
-    // Eigene Header-Styles aufbauen
+    // Der injizierte Style für den Titel!
     const headerStyle = `
       ${this.config.title_color ? `color: ${this.config.title_color};` : ''}
       ${this.config.title_size ? `font-size: ${this.config.title_size};` : ''}
@@ -297,7 +287,6 @@ class ProxmoxCard extends LitElement {
 
   static get styles() {
     return css`
-      /* Neuer Custom Header als Ersatz für den starren HA-Card Header */
       .custom-header {
         padding: 24px 16px 16px 16px;
         font-size: 24px;
