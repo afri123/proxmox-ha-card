@@ -12,12 +12,13 @@ Before using this card, you **must** install and configure the excellent backend
 
 ## ✨ Features
 
-- **Visual UI Editor:** No YAML required! Fully configure the card directly from the Home Assistant Dashboard UI.
+- **Visual UI Editor:** No YAML required! Fully configure the card directly from the Home Assistant Dashboard UI with native entity and icon pickers.
 - **Custom Icons & Images:** Support for MDI-Icons (e.g., `mdi:docker`) or your own images/logos for each VM.
 - **Modern UI:** Built entirely on LitElement for perfect performance and seamless Home Assistant theme integration.
-- **Node Metrics:** Large, clean display of your Proxmox Node's CPU and RAM usage.
-- **VM & Container Management:** - Real-time status indicators (Running/Stopped).
-  - Quick action buttons to Start, Graceful Shutdown, Hard Stop, and Reboot.
+- **Dynamic Node Metrics:** AdGuard-style display of your Proxmox Node's CPU and RAM usage with animated, real-time background fill levels.
+- **VM & Container Management:**
+  - Real-time status indicators (Running/Stopped).
+  - Quick action buttons (with beautiful shadows and hover effects) to Start, Graceful Shutdown, Hard Stop, and Reboot.
   - Smart buttons (e.g., "Start" is disabled if the VM is already running).
 
 ## 📥 Installation
