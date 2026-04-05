@@ -84,25 +84,13 @@ vms:
 |------|------|-------------|-------------|
 | `type` | string | **Required** | Must be `custom:proxmox-ha-card` |
 | `title` | string | Optional | The header title of the card |
+| `box_border` | string | Optional | Global CSS border for the stat boxes (e.g. `1px solid var(--divider-color)`). Default: `none` |
+| `box_shadow` | string | Optional | Global CSS box-shadow for the stat boxes (e.g. `none` or `0 4px 8px rgba(0,0,0,0.1)`). Default is a soft 3D shadow. |
 | `node_cpu` | string | Optional | Entity ID for the node's CPU usage sensor |
 | `cpu_color`| string | Optional | Color of the CPU graph (HEX/RGBA/var). Default: `#2196f3` |
 | `node_memory`| string | Optional | Entity ID for the node's memory usage sensor |
 | `ram_color`| string | Optional | Color of the RAM graph (HEX/RGBA/var). Default: `#9c27b0` |
 | `vms` | list | **Required** | A list of VMs/Containers to display |
-
-#### VM/CT Variables (`vms` list)
-
-| Name | Type | Requirement | Description |
-|------|------|-------------|-------------|
-| `name` | string | **Required** | Display name for the VM/CT |
-| `bg_color`| string | Optional | Custom background color for this row (e.g. `rgba(255,0,0,0.1)`) |
-| `icon` | string | Optional | Custom MDI Icon (e.g. `mdi:ubuntu`) |
-| `image`| string | Optional | URL to a custom image file (overrides icon) |
-| `status` | string | Optional | `binary_sensor` representing the running state |
-| `start` | string | Optional | Entity ID of the start `button` |
-| `shutdown`| string | Optional | Entity ID of the graceful shutdown `button` |
-| `stop` | string | Optional | Entity ID of the hard stop `button` |
-| `reboot`| string | Optional | Entity ID of the reboot `button` |
 
 ## 🐛 Troubleshooting
 - **"Custom element doesn't exist"**: Ensure you have added the resource correctly in the dashboard settings and cleared your browser cache.
