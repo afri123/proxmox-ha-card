@@ -73,6 +73,26 @@ vms:
     reboot: button.pve_qemu_102_reboot
 ```
 
+### Configuration Variables
+
+| Name | Type | Requirement | Description |
+|------|------|-------------|-------------|
+| `type` | string | **Required** | Must be `custom:proxmox-card` |
+| `title` | string | Optional | The header title of the card |
+| `node_cpu` | string | Optional | Entity ID for the node's CPU usage sensor |
+| `node_memory`| string | Optional | Entity ID for the node's memory usage sensor |
+| `vms` | list | **Required** | A list of VMs/Containers to display |
+
+#### VM/CT Variables (`vms` list)
+
+| Name | Type | Requirement | Description |
+|------|------|-------------|-------------|
+| `name` | string | **Required** | Display name for the VM/CT |
+| `status` | string | Optional | `binary_sensor` representing the running state |
+| `start` | string | Optional | Entity ID of the start `button` |
+| `stop` | string | Optional | Entity ID of the stop `button` |
+| `reboot`| string | Optional | Entity ID of the reboot `button` |
+
 ## 🐛 Troubleshooting
 - "Custom element doesn't exist": Ensure you have added the resource correctly in the dashboard settings and cleared your browser cache.
 
