@@ -7,8 +7,9 @@ A modern, fast, and aesthetically pleasing custom card for Home Assistant to mon
 ## ⚠️ Prerequisites
 
 This card is a **Frontend UI only**. It does not communicate with Proxmox directly. 
-Before using this card, you **must** install and configure the excellent backend integration by dougiteixeira:
-👉 [Proxmox VE Integration (dougiteixeira/proxmoxve)](https://github.com/dougiteixeira/proxmoxve)
+Before using this card, you **must** install two things:
+1. The backend integration by dougiteixeira: 👉 [Proxmox VE Integration](https://github.com/dougiteixeira/proxmoxve)
+2. The graph engine via HACS (Frontend): 👉 [Mini Graph Card (kalkih/mini-graph-card)](https://github.com/kalkih/mini-graph-card)
 
 ## ✨ Features
 
@@ -100,10 +101,9 @@ vms:
 | `reboot`| string | Optional | Entity ID of the reboot `button` |
 
 ## 🐛 Troubleshooting
-
 - **"Custom element doesn't exist"**: Ensure you have added the resource correctly in the dashboard settings and cleared your browser cache.
+- **"Custom element doesn't exist: mini-graph-card"**: This card uses the mini-graph-card to render the background charts. Please make sure you have installed it via HACS!
 - **Buttons are greyed out**: Check if the status `binary_sensor` is correct. The card disables the "Start" button if the status is `on` (running), and disables "Stop/Reboot/Shutdown" if the status is `off`.
-- **Image not loading**: Ensure your custom image is located in the `www` folder of Home Assistant and that the path starts with `/local/` (e.g., `/local/my-logo.png`).
 
 ## 📄 License
 
