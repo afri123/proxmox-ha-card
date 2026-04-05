@@ -55,7 +55,14 @@ class ProxmoxCardEditor extends LitElement {
 
     return html`
       <div class="editor-container">
-        <ha-textfield label="Karten-Titel (optional)" .value="${this.config.title || ''}" .configValue="${'title'}" @input="${this._valueChanged}"></ha-textfield>
+        
+        <h3 style="margin-top: 8px; margin-bottom: 4px;">Karten-Titel & Design</h3>
+        <div class="grid-2">
+          <ha-textfield label="Titel Text" .value="${this.config.title || ''}" .configValue="${'title'}" @input="${this._valueChanged}"></ha-textfield>
+          <ha-textfield label="Schriftfarbe (CSS/var)" .value="${this.config.title_color || ''}" .configValue="${'title_color'}" @input="${this._valueChanged}" placeholder="z.B. var(--primary-color)"></ha-textfield>
+          <ha-textfield label="Schriftgröße (CSS)" .value="${this.config.title_size || ''}" .configValue="${'title_size'}" @input="${this._valueChanged}" placeholder="z.B. 24px oder 1.5rem"></ha-textfield>
+          <ha-textfield label="Schriftgewicht" .value="${this.config.title_weight || ''}" .configValue="${'title_weight'}" @input="${this._valueChanged}" placeholder="z.B. bold oder 600"></ha-textfield>
+        </div>
         
         <h3 style="margin-top: 16px; margin-bottom: 4px;">CPU Box Design & Sensor</h3>
         <div class="grid-2">
@@ -168,7 +175,7 @@ class ProxmoxCard extends LitElement {
       line_width: 2,
       hours_to_show: 24,
       points_per_hour: 2,
-      group: true, // WICHTIG: Zwingt mini-graph-card, alle Ränder und Hintergründe abzuwerfen
+      group: true,
       show: {
         name: false, icon: false, state: false, 
         labels: false, fill: true, points: false, legend: false
@@ -215,9 +222,22 @@ class ProxmoxCard extends LitElement {
       ${this.config.ram_shadow ? `--custom-shadow: ${this.config.ram_shadow};` : ''}
     `;
 
+    // Eigene Header-Styles aufbauen
+    const headerStyle = `
+      ${this.config.title_color ? `color: ${this.config.title_color};` : ''}
+      ${this.config.title_size ? `font-size: ${this.config.title_size};` : ''}
+      ${this.config.title_weight ? `font-weight: ${this.config.title_weight};` : ''}
+    `;
+
     return html`
-      <ha-card header="${this.config.title}">
+      <ha-card>
         
+        ${this.config.title ? html`
+          <div class="custom-header" style="${headerStyle}">
+            ${this.config.title}
+          </div>
+        ` : ''}
+
         <div class="stats-grid">
           <div class="stat-box" style="${cpuStyle}">
             ${this._cpuGraph ? html`<div class="graph-wrapper">${this._cpuGraph}</div>` : ''}
@@ -277,6 +297,16 @@ class ProxmoxCard extends LitElement {
 
   static get styles() {
     return css`
+      /* Neuer Custom Header als Ersatz für den starren HA-Card Header */
+      .custom-header {
+        padding: 24px 16px 16px 16px;
+        font-size: 24px;
+        font-weight: 400;
+        color: var(--ha-card-header-color, var(--primary-text-color));
+        letter-spacing: -0.012em;
+        line-height: 32px;
+      }
+
       .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; padding: 0 16px 20px 16px; }
       
       .stat-box {
@@ -299,15 +329,9 @@ class ProxmoxCard extends LitElement {
         box-shadow: var(--custom-shadow, 0 8px 24px rgba(0, 0, 0, 0.08), 0 2px 6px rgba(0, 0, 0, 0.04));
       }
       
-      /* Angepasster Wrapper, damit er flexibel den unteren Rand perfekt füllt */
       .graph-wrapper {
-        position: absolute; 
-        bottom: -2px; /* Zieht den Graph minimal tiefer um weiße Blitzer zu vermeiden */
-        left: 0; 
-        right: 0; 
-        z-index: 0; 
-        opacity: 0.6; 
-        pointer-events: none;
+        position: absolute; bottom: -2px; left: 0; right: 0; 
+        z-index: 0; opacity: 0.6; pointer-events: none;
       }
 
       .stat-content { position: relative; z-index: 1; display: flex; flex-direction: column; text-shadow: 0 1px 2px rgba(255,255,255,0.8); }
@@ -366,6 +390,6 @@ window.customCards = window.customCards || [];
 window.customCards.push({
   type: "proxmox-ha-card",
   name: "Proxmox HA Card",
-  description: "Stylische Karte zur Steuerung von Proxmox mit individuellen Element-Designs.",
+  description: "Stylische Karte zur Steuerung von Proxmox mit anpassbaren Headern und Element-Designs.",
   preview: true
 });
