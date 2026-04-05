@@ -84,6 +84,9 @@ vms:
 |------|------|-------------|-------------|
 | `type` | string | **Required** | Must be `custom:proxmox-ha-card` |
 | `title` | string | Optional | The header title of the card |
+| `title_color`  | string | Optional | Custom CSS color for the header (e.g. `var(--primary-color)`) |
+| `title_size`   | string | Optional | Custom CSS font size for the header (e.g. `24px`) |
+| `title_weight` | string | Optional | Custom CSS font weight for the header (e.g. `bold` or `600`) |
 | `node_cpu` | string | Optional | Entity ID for the node's CPU usage sensor |
 | `cpu_color`| string | Optional | Color of the CPU graph (HEX/RGBA/var). Default: `#2196f3` |
 | `cpu_border`| string | Optional | Specific CSS border for the CPU box (e.g. `1px solid red`) |
