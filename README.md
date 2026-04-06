@@ -5,7 +5,6 @@
 
 A modern, fast, and aesthetically pleasing custom card for Home Assistant to monitor and control your Proxmox Virtual Environment. Inspired by the clean look of the AdGuard card.
 
-
 <table>
   <tr>
     <td><img height="400" alt="proxmox ha card 1" src="https://github.com/user-attachments/assets/f870a007-688b-4815-89af-8d33a09093e4" /></td> 
