@@ -5,7 +5,9 @@
 
 A modern, customisable custom card for Home Assistant to monitor and control your Proxmox Virtual Environment nodes, virtual machines, and containers - all without writing a single line of YAML.
 
-> **Screenshots coming soon** - new screenshots will be added in the next release.
+![Proxmox HA Card](docs/screenshots/pve-card.png)
+
+![Proxmox HA Card Editor](docs/screenshots/pve-card-config.png)
 
 ---
 
