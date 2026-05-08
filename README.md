@@ -1,136 +1,328 @@
-# Proxmox Lovelace Card for Home Assistant
+# Proxmox HA Card for Home Assistant
 
 [![hacs_badge](https://img.shields.io/badge/HACS-Custom-41BDF5.svg?style=for-the-badge)](https://github.com/hacs/integration)
 [![GitHub release (latest by date)](https://img.shields.io/github/v/release/afri123/proxmox-ha-card?style=for-the-badge)](https://github.com/afri123/proxmox-ha-card/releases)
 
-A modern, fast, and aesthetically pleasing custom card for Home Assistant to monitor and control your Proxmox Virtual Environment. Inspired by the clean look of the AdGuard card.
+A modern, customisable custom card for Home Assistant to monitor and control your Proxmox Virtual Environment nodes, virtual machines, and containers - all without writing a single line of YAML.
 
-<table>
-  <tr>
-    <td><img height="400" alt="proxmox ha card 1" src="https://github.com/user-attachments/assets/f870a007-688b-4815-89af-8d33a09093e4" /></td> 
-    <td><img height="400" alt="proxmox ha card 2" src="https://github.com/user-attachments/assets/7f126344-2a50-448d-a254-174d45a22b52" /></td> 
-  </td>
-  </tr>
-</table>
+> **Screenshots coming soon** - new screenshots will be added in the next release.
+
+---
 
 ## ⚠️ Prerequisites
 
-This card is a **Frontend UI only**. It does not communicate with Proxmox directly. 
-Before using this card, you **must** install two things:
-1. The backend integration by dougiteixeira: 👉 [Proxmox VE Integration](https://github.com/dougiteixeira/proxmoxve)
-2. The graph engine via HACS (Frontend): 👉 [Mini Graph Card (kalkih/mini-graph-card)](https://github.com/kalkih/mini-graph-card)
+This card is **frontend UI only**. It does not communicate with Proxmox directly.  
+Before using it, install both of the following:
+
+1. **Backend integration** by dougiteixeira: 👉 [Proxmox VE Integration](https://github.com/dougiteixeira/proxmoxve)
+2. **Graph engine** via HACS (Frontend): 👉 [Mini Graph Card](https://github.com/kalkih/mini-graph-card)
+
+---
 
 ## ✨ Features
 
-- **Visual UI Editor:** No YAML required! Fully configure the card directly from the Home Assistant Dashboard UI with native entity and icon pickers.
-- **Custom Icons & Images:** Support for MDI-Icons (e.g., `mdi:docker`) or your own images/logos for each VM.
-- **Modern UI:** Built entirely on LitElement for perfect performance and seamless Home Assistant theme integration.
-- **Dynamic Node Metrics:** AdGuard-style display of your Proxmox Node's CPU and RAM usage with animated, real-time background fill levels.
-- **VM & Container Management:**
-  - Real-time status indicators (Running/Stopped).
-  - Quick action buttons (with beautiful shadows and hover effects) to Start, Graceful Shutdown, Hard Stop, and Reboot.
-  - Smart buttons (e.g., "Start" is disabled if the VM is already running).
+### Node
+
+- CPU, RAM, and Disk usage stat boxes with label, icon, and value, background sparkline graphs
+- Node status row: running/stopped indicator dot, uptime, and action buttons (Restart, Shut Down, Start All, Stop All, Suspend All)
+- Extra sensor chips: Max CPU, Max Memory, Backup Status, Backup Duration, Last Backup
+- Confirmation dialog for all destructive node actions
+- **One-click node setup**: pick the Proxmox node from a device picker and all entities are filled automatically
+
+### VMs & Containers
+
+The card supports two modes for displaying VMs and containers:
+
+**Auto-discovery** (default, recommended for Proxmox HA clusters)
+
+- VMs and containers are detected in real-time from the HA device registry - no manual configuration needed
+- When Proxmox HA migrates a VM to another node, it disappears from the source card and appears on the destination card automatically
+- Trade-off: per-VM customisation (icon, colour, interactions) is not available in this mode
+
+**Manual** (recommended for stable, non-HA setups)
+
+- Full per-entry customisation: icon, background colour, border, shadow, custom image, and tap/hold interactions
+- Choose exactly which entities (CPU, memory, disk, buttons) are shown per entry
+- Trade-off: if a VM migrates to another node in a Proxmox HA failover, the card will not follow it automatically
+
+**Both modes provide:**
+
+- Real-time running/stopped status with uptime
+- CPU, Memory, and Disk usage with inline background sparkline graphs
+- Action buttons: Start, Shutdown, Stop, Reboot, Snapshot (with confirmation dialogs for destructive actions)
+- Responsive layout: name and uptime stack above buttons when the card is narrow (works correctly even with multiple cards side-by-side)
+
+### Editor
+
+- **Full visual UI editor** - no YAML required
+- **Node device picker**: select your Proxmox node device and the card auto-fills all related entity IDs instantly
+- **Auto-discover toggle** (on by default): VMs and containers are discovered from the HA device registry; turn it off to configure them manually
+- **Reset Defaults** button on the node and each VM/container: re-fills all entity IDs from the device registry with one click; prompts for confirmation before overwriting an existing selection
+- **Internationalization**: UI labels available in English and German; automatically follows your Home Assistant language setting
+- Native HA entity, icon, and colour pickers throughout
+- **Interactions**: configure tap, double-tap, and hold actions (More Info, Navigate, URL, Call Service) for the node area and each VM/container row
+
+---
 
 ## 📥 Installation
 
 ### Method 1: HACS (Recommended)
-Since this is a Lovelace UI card, you need to add it as a custom frontend repository in HACS.
 
 [![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=afri123&repository=proxmox-ha-card&category=plugin)
 
-1. Open Home Assistant and navigate to **HACS → Frontend**.
-2. Click the three dots in the top right corner and select **Custom repositories**.
-3. Add the URL of this repository: `https://github.com/afri123/proxmox-ha-card`
-4. Select Category: **Lovelace**.
-5. Click **Add**, then find "Proxmox HA Card" in the list and click **Download**.
-6. When prompted, reload your browser.
+1. Go to **HACS → Frontend**.
+2. Click the three dots → **Custom repositories**.
+3. Add `https://github.com/afri123/proxmox-ha-card`, category **Lovelace**.
+4. Find "Proxmox HA Card" and click **Download**.
+5. Reload your browser.
 
 ### Method 2: Manual
-1. Download the `proxmox-ha-card.js` file from this repository.
-2. Copy it into your Home Assistant's `config/www` directory.
-3. Go to **Settings → Dashboards → Three dots (top right) → Resources**.
-4. Add a new resource:
-   - URL: `/local/proxmox-ha-card.js`
-   - Resource type: `JavaScript Module`
+
+1. Download `proxmox-ha-card.js` from this repository.
+2. Copy it to `config/www/proxmox-ha-card/proxmox-ha-card.js`.
+3. Go to **Settings → Dashboards → ⋮ → Resources** and add:
+   - URL: `/local/proxmox-ha-card/proxmox-ha-card.js`
+   - Type: `JavaScript Module`
+
+---
 
 ## ⚙️ Configuration
 
-The easiest way to configure this card is using the **Visual Editor** in the Home Assistant Dashboard. Just add a new Custom Card, search for "Proxmox HA Card" and fill in the fields.
+The recommended way is the **Visual Editor** - search for "Proxmox HA Card" when adding a new dashboard card.
 
-### YAML Configuration
-If you prefer the manual YAML editor, you can map the entities generated by the `dougiteixeira/proxmoxve` integration to the card. Here is a full configuration example:
+### Quick Setup
+
+1. Add the card and open the editor.
+2. At the top, select your **Proxmox Node** from the device picker (only Proxmox VE node devices are listed).
+3. All node entity IDs (status, CPU, RAM, disk, buttons, etc.) are filled automatically and the card title is set to the node name.
+4. **Auto-discover** is enabled by default - VMs and containers on that node appear immediately with no further configuration.
+
+To configure VMs manually, turn off **Auto-discover** in the VMs & Containers section. A device picker filtered to the selected node's VMs and containers is available for each entry.
+
+---
+
+### YAML Configuration Reference
+
+Below is a complete example with all available fields:
 
 ```yaml
 type: custom:proxmox-ha-card
-title: Node Proxmox
-node_cpu: sensor.node_proxmox_cpu_auslastung
-node_memory: sensor.node_proxmox_genutzter_arbeitsspeicher
+title: pve1
+title_icon: phu:proxmox
+title_color: "#E57000"
+
+# --- Auto-discovery ---
+auto_discover: true # true = discover VMs/containers from HA device registry
+
+# --- Node device (used for auto-discovery) ---
+node_device_id: <device_id> # set automatically when using the editor
+
+# --- Node Status & Actions ---
+node_status: binary_sensor.pve1_status
+node_uptime: sensor.pve1_uptime
+node_restart: button.pve1_restart
+node_shutdown: button.pve1_shut_down
+node_start_all: button.pve1_start_all
+node_stop_all: button.pve1_stop_all
+node_suspend_all: button.pve1_suspend_all
+
+# --- CPU Box ---
+node_cpu: sensor.pve1_cpu_usage
+cpu_color: "#2196f3"
+cpu_value_color: "" # overrides value & icon color only
+cpu_label_color: "" # overrides label text color only
+
+# --- RAM Box ---
+node_memory: sensor.pve1_memory_usage_percentage
+ram_color: "#9c27b0"
+ram_value_color: ""
+ram_label_color: ""
+
+# --- Disk Box ---
+node_disk: sensor.pve1_disk_usage
+node_disk_size: sensor.pve1_max_disk_usage
+disk_color: "#4caf50"
+disk_value_color: ""
+disk_label_color: ""
+
+# --- Additional Node Sensors ---
+node_max_cpu: sensor.pve1_max_cpu
+node_max_memory: sensor.pve1_max_memory_usage
+node_backup_status: binary_sensor.pve1_backup_status
+node_backup_duration: sensor.pve1_backup_duration
+node_last_backup: sensor.pve1_last_backup
+
+# --- Node Interactions ---
+tap_action:
+  action: more-info
+  entity: sensor.pve1_cpu_usage
+hold_action:
+  action: navigate
+  navigation_path: /lovelace/proxmox
+
+# --- VMs & Containers (used when auto_discover: false) ---
 vms:
-  - name: Home Assistant (VM 200)
+  - name: Home Assistant
     icon: mdi:home-assistant
-    status: binary_sensor.qemu_haos_200_status
-    start: button.pve_qemu_100_start
-    shutdown: button.pve_qemu_100_shutdown
-    stop: button.pve_qemu_100_stop
-    reboot: button.pve_qemu_100_reboot
-  - name: Docker / Portainer (VM)
-    icon: mdi:docker
-    status: binary_sensor.qemu_docker_300_status
-    start: button.pve_lxc_101_start
-    stop: button.pve_lxc_101_stop
-    reboot: button.pve_lxc_101_reboot
-  - name: AdGuard Home (CT 102)
-    image: /local/adguard-logo.png
-    status: binary_sensor.lxc_adguard_102_status
-    start: button.pve_qemu_102_start
-    stop: button.pve_qemu_102_stop
-    reboot: button.pve_qemu_102_reboot
-````
+    status: binary_sensor.haos_status
+    cpu: sensor.haos_cpu_usage
+    memory: sensor.haos_memory_usage_percentage
+    disk: sensor.haos_disk_usage
+    disk_size: sensor.haos_max_disk_usage
+    uptime: sensor.haos_uptime
+    start: button.haos_start
+    shutdown: button.haos_stop
+    stop: button.haos_stop
+    reboot: button.haos_restart
+    snapshot: button.haos_create_snapshot
+    tap_action:
+      action: more-info
+      entity: binary_sensor.haos_status
+```
 
-### Configuration Variables
+---
 
-| Name | Type | Requirement | Description |
-|------|------|-------------|-------------|
-| `type` | string | **Required** | Must be `custom:proxmox-ha-card` |
-| `title` | string | Optional | The header title of the card |
-| `title_color`  | string | Optional | Custom CSS color for the header (e.g. `var(--primary-color)`) |
-| `title_icon` | string | Optional | MDI Icon to display next to the title (e.g. `mdi:server-network`) |
-| `cpu_value_color` | string | Optional | Text color for the CPU percentage value |
-| `cpu_label_color` | string | Optional | Text color for the "CPU Auslastung" label |
-| `ram_value_color` | string | Optional | Text color for the RAM percentage value |
-| `ram_label_color` | string | Optional | Text color for the "RAM Nutzung" label |
-| `title_size`   | string | Optional | Custom CSS font size for the header (e.g. `24px`) |
-| `title_weight` | string | Optional | Custom CSS font weight for the header (e.g. `bold` or `600`) |
-| `node_cpu` | string | Optional | Entity ID for the node's CPU usage sensor |
-| `cpu_color`| string | Optional | Color of the CPU graph (HEX/RGBA/var). Default: `#2196f3` |
-| `cpu_border`| string | Optional | Specific CSS border for the CPU box (e.g. `1px solid red`) |
-| `cpu_shadow`| string | Optional | Specific CSS shadow for the CPU box |
-| `node_memory`| string | Optional | Entity ID for the node's memory usage sensor |
-| `ram_color`| string | Optional | Color of the RAM graph (HEX/RGBA/var). Default: `#9c27b0` |
-| `ram_border`| string | Optional | Specific CSS border for the RAM box |
-| `ram_shadow`| string | Optional | Specific CSS shadow for the RAM box |
-| `vms` | list | **Required** | A list of VMs/Containers to display |
+### Node Configuration Variables
 
-#### VM/CT Variables (`vms` list)
+| Name                   | Type    | Description                                                                       |
+| ---------------------- | ------- | --------------------------------------------------------------------------------- |
+| `type`                 | string  | **Required.** Must be `custom:proxmox-ha-card`                                    |
+| `title`                | string  | Card header title (auto-set to node name when using device picker)                |
+| `title_icon`           | string  | MDI icon next to the title. Default: `phu:proxmox`                                |
+| `title_color`          | string  | CSS colour for the title. Default: `#E57000`                                      |
+| `title_size`           | string  | CSS font size for the title (e.g. `24px`)                                         |
+| `title_weight`         | string  | CSS font weight for the title (e.g. `bold`)                                       |
+| `auto_discover`        | boolean | Discover VMs/containers from the HA device registry. Default: `true`              |
+| `node_device_id`       | string  | HA device ID for the Proxmox node (set automatically by the editor)               |
+| `node_status`          | string  | Entity ID for the node status (`binary_sensor` or `sensor`)                       |
+| `node_uptime`          | string  | Sensor returning node uptime in hours                                             |
+| `node_restart`         | string  | Button entity to restart the node                                                 |
+| `node_shutdown`        | string  | Button entity to shut down the node                                               |
+| `node_start_all`       | string  | Button entity to start all VMs                                                    |
+| `node_stop_all`        | string  | Button entity to stop all VMs                                                     |
+| `node_suspend_all`     | string  | Button entity to suspend all VMs                                                  |
+| `node_cpu`             | string  | Sensor for node CPU usage (%)                                                     |
+| `cpu_color`            | string  | Graph colour for the CPU box. Default: `#2196f3`                                  |
+| `cpu_value_color`      | string  | Color for the CPU value and icon only                                             |
+| `cpu_label_color`      | string  | Color for the CPU label text only                                                 |
+| `cpu_border`           | string  | CSS border for the CPU box                                                        |
+| `cpu_shadow`           | string  | CSS box-shadow for the CPU box                                                    |
+| `node_memory`          | string  | Sensor for node memory usage (%)                                                  |
+| `ram_color`            | string  | Graph colour for the RAM box. Default: `#9c27b0`                                  |
+| `ram_value_color`      | string  | Color for the RAM value and icon only                                             |
+| `ram_label_color`      | string  | Color for the RAM label text only                                                 |
+| `ram_border`           | string  | CSS border for the RAM box                                                        |
+| `ram_shadow`           | string  | CSS box-shadow for the RAM box                                                    |
+| `node_disk`            | string  | Sensor for node disk usage                                                        |
+| `node_disk_size`       | string  | Sensor for node max disk capacity                                                 |
+| `disk_color`           | string  | Graph colour for the Disk box. Default: `#4caf50`                                 |
+| `disk_value_color`     | string  | Color for the Disk value and icon only                                            |
+| `disk_label_color`     | string  | Color for the Disk label text only                                                |
+| `disk_border`          | string  | CSS border for the Disk box                                                       |
+| `disk_shadow`          | string  | CSS box-shadow for the Disk box                                                   |
+| `node_max_cpu`         | string  | Sensor for max CPU across all VMs                                                 |
+| `node_max_memory`      | string  | Sensor for max memory across all VMs                                              |
+| `node_backup_status`   | string  | Entity for backup status (`binary_sensor` with `device_class: problem` supported) |
+| `node_backup_duration` | string  | Sensor for last backup duration                                                   |
+| `node_last_backup`     | string  | Sensor/timestamp for last backup time                                             |
+| `tap_action`           | object  | Action on tap - see [Interactions](#interactions)                                 |
+| `double_tap_action`    | object  | Action on double-tap                                                              |
+| `hold_action`          | object  | Action on hold (500 ms)                                                           |
+| `vms`                  | list    | List of VMs/Containers used when `auto_discover: false` - see below               |
 
-| Name | Type | Requirement | Description |
-|------|------|-------------|-------------|
-| `name` | string | **Required** | Display name for the VM/CT |
-| `bg_color`| string | Optional | Custom background color for this specific row |
-| `border` | string | Optional | Custom CSS border for this specific row |
-| `shadow` | string | Optional | Custom CSS box-shadow for this specific row |
-| `icon` | string | Optional | Custom MDI Icon (e.g. `mdi:ubuntu`) |
-| `image`| string | Optional | URL to a custom image file (overrides icon) |
-| `status` | string | Optional | `binary_sensor` representing the running state |
-| `start` | string | Optional | Entity ID of the start `button` |
-| `shutdown`| string | Optional | Entity ID of the graceful shutdown `button` |
-| `stop` | string | Optional | Entity ID of the hard stop `button` |
-| `reboot`| string | Optional | Entity ID of the reboot `button` |
+---
+
+### VM / Container Configuration Variables (`vms` list)
+
+Only relevant when `auto_discover: false`.
+
+| Name                | Type   | Description                                                  |
+| ------------------- | ------ | ------------------------------------------------------------ |
+| `name`              | string | **Required.** Display name                                   |
+| `device_id`         | string | HA device ID (set automatically by the editor device picker) |
+| `status`            | string | `binary_sensor` for the running state                        |
+| `cpu`               | string | Sensor for CPU usage (%)                                     |
+| `memory`            | string | Sensor for memory usage (%)                                  |
+| `disk`              | string | Sensor for disk usage                                        |
+| `disk_size`         | string | Sensor for max disk capacity                                 |
+| `uptime`            | string | Sensor for uptime (hours)                                    |
+| `start`             | string | Button entity to start                                       |
+| `shutdown`          | string | Button entity for graceful shutdown                          |
+| `stop`              | string | Button entity for hard stop                                  |
+| `reboot`            | string | Button entity to reboot                                      |
+| `snapshot`          | string | Button entity to create a snapshot                           |
+| `icon`              | string | MDI icon (e.g. `mdi:ubuntu`)                                 |
+| `image`             | string | URL to a custom image - overrides `icon`                     |
+| `bg_color`          | string | CSS background colour for the row                            |
+| `border`            | string | CSS border for the row                                       |
+| `shadow`            | string | CSS box-shadow for the row                                   |
+| `tap_action`        | object | Action on tap - see [Interactions](#interactions)            |
+| `double_tap_action` | object | Action on double-tap                                         |
+| `hold_action`       | object | Action on hold (500 ms)                                      |
+
+---
+
+### Interactions
+
+Tap, double-tap, and hold actions can be configured on the node area (header + stats) and on each VM/container row. Buttons always take priority over row interactions.
+
+| `action` value | Additional fields         | Description                                           |
+| -------------- | ------------------------- | ----------------------------------------------------- |
+| `none`         | -                         | No action (default)                                   |
+| `more-info`    | `entity`                  | Opens the More Info dialog for the given entity       |
+| `navigate`     | `navigation_path`         | Navigates to a path within HA (e.g. `/lovelace/home`) |
+| `url`          | `url_path`                | Opens a URL in a new tab                              |
+| `call-service` | `service`, `service_data` | Calls a HA service (e.g. `light.turn_on`)             |
+
+---
+
+## 🔄 Auto-Discovery
+
+When `auto_discover: true` (the default), the card reads the Home Assistant device registry at render time to find all VMs and containers linked to the selected node. No manual entity configuration is needed.
+
+**How it works:**
+
+- The Proxmox VE integration registers each node, VM, and container as a device in HA
+- The card filters devices where `via_device_id` matches the node's device ID and `model` is `VM` or `Container`
+- Entities (CPU, memory, disk, buttons, etc.) are matched by their naming convention
+
+**Proxmox High Availability:** when HA migrates a VM to a different node, it disappears from the source node's card and appears on the destination node's card automatically - no reconfiguration needed.
+
+| Scenario                             | Behaviour                                                                 |
+| ------------------------------------ | ------------------------------------------------------------------------- |
+| `auto_discover: true`, node selected | VMs/containers discovered automatically                                   |
+| VM migrates to another node          | Disappears from this card, appears on destination card                    |
+| New VM added in Proxmox              | Appears after HA refreshes its device registry (typically within minutes) |
+| `auto_discover: false`               | Manual `vms` list is used - existing config is preserved when toggling    |
+
+---
+
+## 🌐 Internationalization
+
+The card editor UI automatically follows your Home Assistant language setting. Currently supported languages:
+
+| Language | Code |
+| -------- | ---- |
+| English  | `en` |
+| German   | `de` |
+
+To contribute a translation, add a new language key to the `TRANSLATIONS` object in `proxmox-ha-card.js`.
+
+---
 
 ## 🐛 Troubleshooting
-- **"Custom element doesn't exist"**: Ensure you have added the resource correctly in the dashboard settings and cleared your browser cache.
-- **"Custom element doesn't exist: mini-graph-card"**: This card uses the mini-graph-card to render the background charts. Please make sure you have installed it via HACS!
-- **Buttons are greyed out**: Check if the status `binary_sensor` is correct. The card disables the "Start" button if the status is `on` (running), and disables "Stop/Reboot/Shutdown" if the status is `off`.
+
+| Problem                                         | Solution                                                                                        |
+| ----------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| "Custom element doesn't exist"                  | Ensure the resource URL is correct and clear your browser cache                                 |
+| "Custom element doesn't exist: mini-graph-card" | Install Mini Graph Card via HACS (Frontend)                                                     |
+| Buttons are greyed out                          | Check that the `status` binary_sensor entity ID is correct                                      |
+| Backup status always shows "Problem"            | Ensure the entity has `device_class: problem` - the card inverts `off` → OK, `on` → Problem     |
+| No devices in the node picker                   | Ensure the Proxmox VE integration is installed and has discovered your nodes                    |
+| Auto-discover shows no VMs                      | Check that the node device picker is set; VMs appear after HA refreshes the device registry     |
+| Device picker lists wrong VMs                   | The picker is filtered to VMs/containers linked to the selected node via the HA device registry |
+
+---
 
 ## 📄 License
 
